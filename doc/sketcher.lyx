@@ -1,0 +1,183 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip smallskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+For a line, assume we'll parameterize it such that one end corresponds to
+ t=0, and the other end is at t=1:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+x\left(t\right)=at+b
+\end{equation}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{equation}
+y\left(t\right)=ct+d
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+End points:
+\begin_inset Formula 
+\begin{equation}
+x_{s}=x\left(0\right)=b
+\end{equation}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{equation}
+y_{s}=y\left(0\right)=d
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and:
+\begin_inset Formula 
+\begin{equation}
+x_{f}=x\left(1\right)=a+b
+\end{equation}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{equation}
+y_{f}=y\left(1\right)=c+d
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Line length:
+\begin_inset Formula 
+\begin{eqnarray}
+L & = & \sqrt{\left(x_{f}-x_{s}\right)^{2}+\left(y_{f}-y_{s}\right)^{2}}\\
+ & = & \sqrt{a^{2}+c^{2}}
+\end{eqnarray}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Unit direction vector:
+\begin_inset Formula 
+\begin{eqnarray}
+\mathbf{\hat{T}} & = & \frac{x_{f}-x_{s}}{L}\mathbf{\hat{i}}+\frac{y_{f}-y_{s}}{L}\mathbf{\hat{j}}\\
+ & = & \frac{1}{\sqrt{a^{2}+c^{2}}}\left(a\mathbf{\hat{i}}+c\mathbf{\hat{j}}\right)
+\end{eqnarray}
+
+\end_inset
+
+Orientation of line segment (measured from horizontal):
+\begin_inset Formula 
+\begin{eqnarray}
+\theta & = & \mathrm{atan2}\left(y_{f}-y_{s},x_{f}-x_{s}\right)\\
+ & = & \mathrm{atan2}\left(c,a\right)
+\end{eqnarray}
+
+\end_inset
+
+and going the other direction:
+\begin_inset Formula 
+\begin{equation}
+x_{f}-x_{s}=a=L\cos\theta
+\end{equation}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{equation}
+y_{f}-y_{s}=c=L\sin\theta
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Note: a line segment requires 4 parameters to be fully defined
+\end_layout
+
+\end_body
+\end_document

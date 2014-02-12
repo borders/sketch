@@ -1,0 +1,269 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip smallskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+Assume the configuration of the system can be described by 
+\begin_inset Formula $N$
+\end_inset
+
+ generalized coordinates 
+\begin_inset Formula $q_{1},q_{2},\ldots q_{N}$
+\end_inset
+
+.
+ Assume that we wish to enforce 
+\begin_inset Formula $M$
+\end_inset
+
+ constraint relations.
+ or each constraint relation, we need to devise a cost function - a positive-val
+ued function whose value is zero when the constraint is exactly satisfied.
+ The total cost, 
+\begin_inset Formula $C$
+\end_inset
+
+, that we seek to minimize is then just the sum of all 
+\begin_inset Formula $M$
+\end_inset
+
+ cost functions:
+\begin_inset Formula 
+\begin{eqnarray}
+C\left(q_{1},q_{2},\ldots,q_{N}\right) & = & C_{1}\left(q_{1},q_{2},\ldots,q_{N}\right)+C_{2}\left(q_{1},q_{2},\ldots,q_{N}\right)+\cdots+C_{M}\left(q_{1},q_{2},\ldots,q_{N}\right)\\
+ & = & \sum_{i=1}^{M}C_{i}\left(q_{1},q_{2},\ldots,q_{N}\right)
+\end{eqnarray}
+
+\end_inset
+
+We minimize 
+\begin_inset Formula $C$
+\end_inset
+
+ by equating all of its partial derivative to zero:
+\begin_inset Formula 
+\begin{eqnarray}
+\frac{\partial C}{\partial q_{1}} & = & 0\label{eq:partials_eq_zero}\\
+\frac{\partial C}{\partial q_{2}} & = & 0\nonumber \\
+ & \vdots\nonumber \\
+\frac{\partial C}{\partial q_{N}} & = & 0\nonumber 
+\end{eqnarray}
+
+\end_inset
+
+If we expand 
+\begin_inset Formula $C$
+\end_inset
+
+ into the sum of each constraint's contribution, the 
+\begin_inset Formula $j^{th}$
+\end_inset
+
+ partial looks like: 
+\begin_inset Formula 
+\begin{eqnarray}
+\frac{\partial C}{\partial q_{j}} & = & \frac{\partial C_{1}}{\partial q_{j}}+\frac{\partial C_{2}}{\partial q_{j}}+\cdots+\frac{\partial C_{M}}{\partial q_{j}}\\
+ & = & \sum_{i=1}^{M}\frac{\partial C_{i}}{\partial q_{j}}
+\end{eqnarray}
+
+\end_inset
+
+In general, each of the above partial derivatives is a function of 
+\begin_inset Formula $q_{1},q_{2},\ldots q_{N}$
+\end_inset
+
+.
+ Therefore, 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:partials_eq_zero"
+
+\end_inset
+
+ represents a system of 
+\begin_inset Formula $N$
+\end_inset
+
+ equations:
+\begin_inset Formula 
+\begin{eqnarray}
+f_{1}\left(q_{1},q_{2},\ldots,q_{N}\right) & = & \frac{\partial C}{\partial q_{1}}\\
+f_{2}\left(q_{1},q_{2},\ldots,q_{N}\right) & = & \frac{\partial C}{\partial q_{2}}\\
+ & \vdots\\
+f_{N}\left(q_{1},q_{2},\ldots,q_{N}\right) & = & \frac{\partial C}{\partial q_{N}}
+\end{eqnarray}
+
+\end_inset
+
+ Writing the first order Taylor series for 
+\begin_inset Formula $f_{i}$
+\end_inset
+
+:
+\begin_inset Formula 
+\begin{equation}
+f_{i}\left(\mathbf{q_{g}}+\mathbf{\Delta q}\right)=f_{i}\left(\mathbf{q_{g}}\right)+\left.\frac{\partial f_{i}}{\partial q_{1}}\right|_{\mathbf{q_{g}}}\Delta q_{1}+\left.\frac{\partial f_{i}}{\partial q_{2}}\right|_{\mathbf{q_{g}}}\Delta q_{2}+\cdots+\left.\frac{\partial f_{i}}{\partial q_{N}}\right|_{\mathbf{q_{g}}}\Delta q_{N}\label{eq:taylor_first}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\mathbf{q_{g}}=\left(q_{g,1},q_{g,2},\ldots,q_{g,N}\right)$
+\end_inset
+
+ denotes the initial (guess) values of all the system parameter (which in
+ general will NOT minimize the cost function), and 
+\begin_inset Formula $\mathbf{\Delta q}=\left(\Delta q_{1},\Delta q_{2},\ldots,\Delta q_{N}\right)$
+\end_inset
+
+ denotes the change required to each parameter in order to minimize the
+ cost function.
+ In this case, The left hand side of equation 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:taylor_first"
+
+\end_inset
+
+ is zero.
+ Rearranging it slightly:
+\begin_inset Formula 
+\begin{equation}
+\left.\frac{\partial f_{i}}{\partial q_{1}}\right|_{\mathbf{q_{g}}}\Delta q_{1}+\left.\frac{\partial f_{i}}{\partial q_{2}}\right|_{\mathbf{q_{g}}}\Delta q_{2}+\cdots+\left.\frac{\partial f_{i}}{\partial q_{N}}\right|_{\mathbf{q_{g}}}\Delta q_{N}=-f_{i}\left(\mathbf{q_{g}}\right)\label{eq:taylor_first-1}
+\end{equation}
+
+\end_inset
+
+We can write this equation for 
+\begin_inset Formula $i=1,2,\ldots,N$
+\end_inset
+
+, yielding a system of 
+\begin_inset Formula $N$
+\end_inset
+
+ linear equations:
+\begin_inset Formula 
+\begin{equation}
+\underbrace{\left.\begin{bmatrix}\frac{\partial f_{1}}{\partial q_{1}} & \frac{\partial f_{1}}{\partial q_{2}} & \cdots & \frac{\partial f_{1}}{\partial q_{N}}\\
+\frac{\partial f_{2}}{\partial q_{1}} & \frac{\partial f_{2}}{\partial q_{2}} & \cdots & \frac{\partial f_{2}}{\partial q_{N}}\\
+\vdots & \vdots & \ddots & \vdots\\
+\frac{\partial f_{N}}{\partial q_{1}} & \frac{\partial f_{N}}{\partial q_{2}} & \cdots & \frac{\partial f_{N}}{\partial q_{N}}
+\end{bmatrix}\right|_{\mathbf{q_{g}}}}_{A\left(\mathbf{q_{g}}\right)}\underbrace{\begin{bmatrix}\Delta q_{1}\\
+\Delta q_{2}\\
+\vdots\\
+\Delta q_{N}
+\end{bmatrix}}_{\mathbf{\Delta q}}=\underbrace{\begin{bmatrix}-f_{1}\left(\mathbf{q_{g}}\right)\\
+-f_{2}\left(\mathbf{q_{g}}\right)\\
+\vdots\\
+-f_{N}\left(\mathbf{q_{g}}\right)
+\end{bmatrix}}_{-\mathbf{f}\left(\mathbf{q_{g}}\right)}
+\end{equation}
+
+\end_inset
+
+From here, we can invert the 
+\begin_inset Formula $A$
+\end_inset
+
+ matrix and solve for 
+\begin_inset Formula $\mathbf{\Delta q}$
+\end_inset
+
+:
+\begin_inset Formula 
+\begin{equation}
+\mathbf{\Delta q}=-A^{-1}\mathbf{f}
+\end{equation}
+
+\end_inset
+
+It will not be uncommon for the system to be underdefined.
+ This can happen when the cost function has no dependence on one of more
+ of the system parameters.
+ This causes the 
+\begin_inset Formula $f_{i}$
+\end_inset
+
+ and all its partial derivatives to be zero, and for the 
+\begin_inset Formula $A$
+\end_inset
+
+ matrix to lose full rank.
+ In this case, the degenerate row(s) may be removed from the linear system,
+ leaving us with a non-square system.
+ We can then use the generalized inverse to solve for 
+\begin_inset Formula $\mathbf{\Delta q}$
+\end_inset
+
+:
+\begin_inset Formula 
+\begin{equation}
+\mathbf{\Delta q}=-\left(A^{T}A\right)^{-1}A^{T}\mathbf{f}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
