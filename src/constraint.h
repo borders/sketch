@@ -35,6 +35,8 @@ typedef enum {
 
 typedef struct {
 	constraint_type_t type;
+	char name[255];
+	char suppresed;
 } constraint_t;
 
 typedef struct _constraint_list_item {
