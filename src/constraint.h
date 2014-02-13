@@ -4,27 +4,47 @@
 #include "sketch_types.h"
 
 typedef enum {
-	CONSTRAINT_TYPE_POINT_ON_POINT,
+	CONSTRAINT_TYPE_POINTS_COINCIDENT,
+	CONSTRAINT_TYPE_POINTS_X_DIST,
+	CONSTRAINT_TYPE_POINTS_Y_DIST,
+	CONSTRAINT_TYPE_POINTS_DIST,
+
+	CONSTRAINT_TYPE_LINE_HORIZ,
+	CONSTRAINT_TYPE_LINE_VERT,
+	CONSTRAINT_TYPE_LINE_LENGTH,
+
+	CONSTRAINT_TYPE_LINES_ANGLE,
+	CONSTRAINT_TYPE_LINES_PARALLEL,
+	CONSTRAINT_TYPE_LINES_ORTHOG,
+	CONSTRAINT_TYPE_LINES_COLLINEAR,
+
+	CONSTRAINT_TYPE_LINE_POINT_MIDPOINT,
+	CONSTRAINT_TYPE_LINE_POINT_COINCIDENT,
+	CONSTRAINT_TYPE_LINE_POINT_DIST,
+
+	CONSTRAINT_TYPE_ARC_RADIUS,
+
+	CONSTRAINT_TYPE_LINE_ARC_TANGENT,
+	CONSTRAINT_TYPE_ARC_ARC_TANGENT,
+
+	CONSTRAINT_TYPE_ARCS_EQUAL,
+	CONSTRAINT_TYPE_ARCS_CONCENTRIC,
 
 	NUM_CONSTRAINT_TYPES
-} sketch_constraint_type_t;
-
-struct _sketch_base;
+} constraint_type_t;
 
 typedef struct {
-	sketch_constraint_type_t type;
-	struct _sketch_base *shape_1;
-	struct _sketch_base *shape_2;
-} sketch_constraint_t;
+	constraint_type_t type;
+} constraint_t;
 
-typedef struct _sketch_constraint_list_item {
-	sketch_constraint_t *constraint;
-	struct _sketch_constraint_list_item *next;
-} sketch_constraint_list_item_t;
+typedef struct _constraint_list_item {
+	constraint_t *constraint;
+	struct _constraint_list_item *next;
+} constraint_list_item_t;
 
 typedef struct {
-	sketch_constraint_list_item_t *head;
-	sketch_constraint_list_item_t *tail;
-} sketch_constraint_list_t;
+	constraint_list_item_t *head;
+	constraint_list_item_t *tail;
+} constraint_list_t;
 
 #endif
