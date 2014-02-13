@@ -1,7 +1,7 @@
 #if !defined(SKETCH_TYPES_H_)
 #define SKETCH_TYPES_H_
 
-#include "sketch_constraint.h"
+#include "constraint.h"
 
 typedef enum {
 	SHAPE_TYPE_LINE = 0,
