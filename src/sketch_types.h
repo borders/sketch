@@ -28,7 +28,7 @@ typedef struct {
 typedef struct _sketch_base {
 	sketch_shape_type_t type;
 
-	constraint_list_t constraints;
+	//constraint_list_t constraints;
 
 	char is_selected;
 

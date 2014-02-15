@@ -14,8 +14,8 @@ static void sketch_base_init(sketch_base_t *self, sketch_shape_type_t type)
 	assert(type >= 0 && type < NUM_SHAPE_TYPES);
 	self->type = type;
 
-	self->constraints.head = NULL;
-	self->constraints.tail = NULL;
+	//self->constraints.head = NULL;
+	//self->constraints.tail = NULL;
 
 	self->is_selected = 0;
 
