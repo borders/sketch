@@ -1,6 +1,11 @@
 #if !defined(SKETCH_TYPES_H_)
 #define SKETCH_TYPES_H_
 
+/* some forward declarations */
+typedef struct _sketch_line sketch_line_t;
+typedef struct _sketch_arc sketch_arc_t;
+typedef struct _sketch_circle sketch_circle_t;
+
 #include "constraint.h"
 
 typedef enum {
@@ -42,24 +47,24 @@ typedef struct {
 	double y;
 } coord_2D_t;
 
-typedef struct {
+struct _sketch_line {
 	sketch_base_t base;
 	coord_2D_t v1;
 	coord_2D_t v2;
-} sketch_line_t;
+};
 	
-typedef struct {
+struct _sketch_arc {
 	sketch_base_t base;
 	coord_2D_t v1;
 	coord_2D_t v2;
 	coord_2D_t center;
-} sketch_arc_t;
+};
 	
-typedef struct {
+struct _sketch_circle {
 	sketch_base_t base;
 	coord_2D_t center;
 	double radius;
-} sketch_circle_t;
+};
 
 /* color constants */	
 extern const color_t color_const_black;

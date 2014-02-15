@@ -27,7 +27,7 @@ static void sketch_base_init(sketch_base_t *self, sketch_shape_type_t type)
 void sketch_line_init(sketch_line_t *self, 
                       coord_2D_t const *v1, coord_2D_t const *v2)
 {
-	sketch_shape_init( (sketch_base_t *)self, SHAPE_TYPE_LINE);
+	sketch_base_init( (sketch_base_t *)self, SHAPE_TYPE_LINE);
 	if (v1 == NULL) {
 		self->v1.x = 0.0;
 		self->v1.y = 0.0;
@@ -45,7 +45,7 @@ void sketch_line_init(sketch_line_t *self,
 void sketch_circle_init(sketch_circle_t *self, 
                         coord_2D_t const *center, double radius)
 {
-	sketch_shape_init( (sketch_base_t *)self, SHAPE_TYPE_CIRCLE);
+	sketch_base_init( (sketch_base_t *)self, SHAPE_TYPE_CIRCLE);
 	if (center == NULL) {
 		self->center.x = 0.0;
 		self->center.y = 0.0;
