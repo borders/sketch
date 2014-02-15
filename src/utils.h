@@ -3,13 +3,11 @@
 
 #include <stdio.h>
 
+/* standard stringification macros */
+#define STR(x) #x
+#define STR_(x) STR(x)
 
-#if 0
-#define ERROR(fs, ...) \
-	fprintf (stderr, "ERROR::" __FILE__ "::" __LINE__ "::" fs, __VA_ARGS__)
-#else
-#define ERROR(fs, ...) \
-	fprintf (stderr,fs, __VA_ARGS__)
-#endif
+#define ERROR(...) \
+	fprintf (stderr, "ERROR::" __FILE__ "::" STR_(__LINE__) "::" __VA_ARGS__)
 
 #endif

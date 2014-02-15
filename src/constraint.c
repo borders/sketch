@@ -27,7 +27,7 @@ constraint_t *constraint_alloc(void)
 	constraint_t *c;
 	c = calloc(1, sizeof(constraint_t));
 	if (c == NULL) {
-		//ERROR("Out of memory");
+		ERROR("Out of memory");
 		return NULL;
 	}
 	return c;
