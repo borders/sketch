@@ -19,8 +19,9 @@ struct _constraint {
 
 	double arg1;
 	double arg2;
-};
 
+	double (*cost)(constraint_t *);
+};
 
 constraint_t *constraint_alloc(void)
 {
@@ -33,6 +34,36 @@ constraint_t *constraint_alloc(void)
 	return c;
 }
 
+static double cost_point_x_coord(constraint_t *self)
+{
+	return 0.0;
+}
+
+static double cost_point_y_coord(constraint_t *self)
+{
+	return 0.0;
+}
+
+static double cost_line_length(constraint_t *self)
+{
+	return 0.0;
+}
+
+static double cost_line_horiz(constraint_t *self)
+{
+	return 0.0;
+}
+
+static double cost_line_vert(constraint_t *self)
+{
+	return 0.0;
+}
+
+static double cost_dummy(constraint_t *self)
+{
+	return 0.0;
+}
+
 int constraint_init(constraint_t *self, constraint_type_t type)
 {
 	assert(self != NULL);
@@ -41,6 +72,26 @@ int constraint_init(constraint_t *self, constraint_type_t type)
 	self->type = type;
 	strcpy(self->name, "");
 	self->suppressed = 0;
+
+	switch(self->type) {
+		case CT_POINT_X_COORD:
+			self->cost = &cost_point_x_coord;
+			break;
+		case CT_POINT_Y_COORD:
+			self->cost = &cost_point_y_coord;
+			break;
+		case CT_LINE_LENGTH:
+			self->cost = &cost_line_length;
+			break;
+		case CT_LINE_HORIZ:
+			self->cost = &cost_line_horiz;
+			break;
+		case CT_LINE_VERT:
+			self->cost = &cost_line_vert;
+			break;
+		default:
+			self->cost = &cost_dummy;
+	}
 	
 	return 0;
 }
@@ -53,6 +104,12 @@ int constraint_fini(constraint_t *self)
 void constraint_free(constraint_t *self)
 {
 	free(self);
+}
+
+
+int constraint_cost(constraint_t *self)
+{
+	return self->cost(self);
 }
 
 int constraint_init_line_length(constraint_t *self, sketch_line_t *line, 
