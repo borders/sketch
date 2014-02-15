@@ -8,7 +8,6 @@ AM_INIT_AUTOMAKE(hello,1.0)
 AC_PROG_MAKE_SET
 
 AC_CONFIG_SRCDIR([constraint.h])
-AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CC
