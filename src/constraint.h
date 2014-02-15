@@ -50,4 +50,16 @@ typedef struct {
 	int length;
 } constraint_list_t;
 
+/***********************************************/
+
+constraint_t *constraint_alloc(void);
+int constraint_init(constraint_t *self, constraint_type_t type);
+int constraint_fini(constraint_t *self);
+void constraint_free(constraint_t *self);
+
+int constraint_init_line_length(constraint_t *self, sketch_line_t *line, 
+                                double length);
+int constraint_init_line_horiz(constraint_t *self, sketch_line_t *line);
+int constraint_init_line_vert(constraint_t *self, sketch_line_t *line);
+
 #endif
