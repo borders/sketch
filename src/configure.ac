@@ -2,15 +2,12 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.68])
-AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS])
-AM_INIT_AUTOMAKE(hello,1.0)
-
-AC_PROG_MAKE_SET
-
-AC_CONFIG_SRCDIR([constraint.h])
+AC_INIT([sketch], [0.1], [James.W.Borders@gmail.com])
+AM_INIT_AUTOMAKE
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_MAKE_SET
 
 # Checks for libraries.
 
