@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "sketch_types.h"
+#include "utils.h"
 
 const color_t color_const_black = {0.0, 0.0, 0.0};
 const color_t color_const_red   = {1.0, 0.0, 0.0};
@@ -22,6 +23,66 @@ static void sketch_base_init(sketch_base_t *self, sketch_shape_type_t type)
 	self->line_width = 1.0;
 	self->line_type = LINE_TYPE_SOLID;
 	self->line_color = color_const_black;
+}
+
+sketch_line_t *sketch_line_alloc(void)
+{
+	sketch_line_t *self = calloc(1, sizeof(sketch_line_t));
+	if(self == NULL) {
+		ERROR("Out of memory");
+		return NULL;
+	}
+	return self;
+}
+
+sketch_arc_t *sketch_arc_alloc(void)
+{
+	sketch_arc_t *self = calloc(1, sizeof(sketch_arc_t));
+	if(self == NULL) {
+		ERROR("Out of memory");
+		return NULL;
+	}
+	return self;
+}
+
+sketch_circle_t *sketch_circle_alloc(void)
+{
+	sketch_circle_t *self = calloc(1, sizeof(sketch_circle_t));
+	if(self == NULL) {
+		ERROR("Out of memory");
+		return NULL;
+	}
+	return self;
+}
+
+int sketch_line_fini(sketch_line_t *self)
+{
+	return 0;
+}
+
+int sketch_arc_fini(sketch_arc_t *self)
+{
+	return 0;
+}
+
+int sketch_circle_fini(sketch_circle_t *self)
+{
+	return 0;
+}
+
+void sketch_line_free(sketch_line_t *self)
+{
+	free(self);
+}
+
+void sketch_arc_free(sketch_arc_t *self)
+{
+	free(self);
+}
+
+void sketch_circle_free(sketch_circle_t *self)
+{
+	free(self);
 }
 
 void sketch_line_init(sketch_line_t *self, 

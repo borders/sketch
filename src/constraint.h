@@ -57,7 +57,7 @@ int constraint_init(constraint_t *self, constraint_type_t type);
 int constraint_fini(constraint_t *self);
 void constraint_free(constraint_t *self);
 
-int constraint_cost(constraint_t *self);
+double constraint_cost(constraint_t *self);
 
 int constraint_init_line_length(constraint_t *self, sketch_line_t *line, 
                                 double length);

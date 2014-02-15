@@ -2,6 +2,7 @@
 #include <stdarg.h>
 #include <assert.h>
 #include <string.h>
+#include <math.h>
 #include "constraint.h"
 #include "utils.h"
 
@@ -46,17 +47,32 @@ static double cost_point_y_coord(constraint_t *self)
 
 static double cost_line_length(constraint_t *self)
 {
-	return 0.0;
+	/*
+		arg1 = sqrt( (x2-x1)^2 + (y2-y1)^2 )
+	*/
+	double dx = self->line1->v2.x - self->line1->v1.x;
+	double dy = self->line1->v2.y - self->line1->v1.y;
+	double L = sqrt(dx * dx + dy * dy);
+	double err = self->arg1 - L;
+	return (err*err);
 }
 
 static double cost_line_horiz(constraint_t *self)
 {
-	return 0.0;
+	/*
+		y1 = y2
+	*/
+	double err = self->line1->v2.y - self->line1->v1.y;
+	return (err*err);
 }
 
 static double cost_line_vert(constraint_t *self)
 {
-	return 0.0;
+	/*
+		x1 = x2
+	*/
+	double err = self->line1->v2.x - self->line1->v1.x;
+	return (err*err);
 }
 
 static double cost_dummy(constraint_t *self)
@@ -107,7 +123,7 @@ void constraint_free(constraint_t *self)
 }
 
 
-int constraint_cost(constraint_t *self)
+double constraint_cost(constraint_t *self)
 {
 	return self->cost(self);
 }
@@ -129,6 +145,7 @@ int constraint_init_line_horiz(constraint_t *self, sketch_line_t *line)
 	int ret = constraint_init(self, CT_LINE_HORIZ);
 	if (ret != 0)
 		return ret;
+	self->line1 = line;
 	return 0;
 }
 
@@ -137,5 +154,6 @@ int constraint_init_line_vert(constraint_t *self, sketch_line_t *line)
 	int ret = constraint_init(self, CT_LINE_VERT);
 	if (ret != 0)
 		return ret;
+	self->line1 = line;
 	return 0;
 }

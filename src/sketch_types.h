@@ -74,9 +74,20 @@ extern const color_t color_const_blue;
 extern const color_t color_const_white;
 
 /* func protos */
+sketch_line_t *sketch_line_alloc(void);
+sketch_arc_t *sketch_arc_alloc(void);
+sketch_circle_t *sketch_circle_alloc(void);
+
 void sketch_line_init(sketch_line_t *self, 
                       coord_2D_t const *v1, coord_2D_t const *v2);
 void sketch_circle_init(sketch_circle_t *self, 
                         coord_2D_t const *center, double radius);
 
+int sketch_line_fini(sketch_line_t *self);
+int sketch_arc_fini(sketch_arc_t *self);
+int sketch_circle_fini(sketch_circle_t *self);
+
+void sketch_line_free(sketch_line_t *self);
+void sketch_arc_free(sketch_arc_t *self);
+void sketch_circle_free(sketch_circle_t *self);
 #endif
