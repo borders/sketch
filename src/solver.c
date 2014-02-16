@@ -3,7 +3,6 @@
 #include "solver.h"
 #include "utils.h"
 
-
 parm_map_t *parm_map_alloc(void)
 {
 	parm_map_t *self = calloc(1, sizeof(parm_map_t));
@@ -30,6 +29,7 @@ static void map_add(parm_map_t *self, const double *val)
 	for(i=0; i < self->size; i++) {
 		if(val == self->values[i]) {
 			// value already in map -> we're done here...
+			DEBUG2("Entry %p already exists in parm_map", (void *)val);
 			return;
 		}
 	}
@@ -37,12 +37,14 @@ static void map_add(parm_map_t *self, const double *val)
 		ERROR("parm_map overflow");
 		return;
 	}
+	DEBUG2("Adding entry to parm_map: %p", (void *)val);
 	self->values[self->size++] = (double *)val;
 	return;
 }
 
 int parm_map_init(parm_map_t *self, const constraint_t *c[], int c_count)
 {
+	DEBUG2("init'ing parm_map...");
 	int i;
 	self->size = 0;
 	for(i=0; i < c_count; i++) {

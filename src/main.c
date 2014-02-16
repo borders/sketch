@@ -3,11 +3,10 @@
 #include <string.h>
 #include "constraint.h"
 #include "sketch_types.h"
+#include "solver.h"
 
 int main(void) 
 {
-	printf("hello world\n");
-
 	coord_2D_t pt1, pt2;
 
 	sketch_line_t *l1, *l2, *l3;
@@ -56,6 +55,12 @@ int main(void)
 	
 	cost = constraint_cost(constraints[2]);
 	printf("c3 cost: %lg\n", cost);
+
+	parm_map_t *map;
+	map = parm_map_alloc();
+	parm_map_init(map, constraints, 3);
+	printf("parm_map size: %d\n", map->size);
+
 	return 0;
 }
 
