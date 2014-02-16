@@ -39,6 +39,24 @@ typedef enum {
 
 typedef struct _constraint constraint_t;
 
+struct _constraint {
+	constraint_type_t type;
+	char name[255];
+	char suppressed;
+	
+	sketch_line_t *line1;
+	sketch_line_t *line2;
+	coord_2D_t *point1;
+	coord_2D_t *point2;
+	sketch_arc_t *arc1;
+	sketch_arc_t *arc2;
+
+	double arg1;
+	double arg2;
+
+	double (*cost)(constraint_t *);
+};
+
 typedef struct _constraint_list_item {
 	constraint_t *constraint;
 	struct _constraint_list_item *next;

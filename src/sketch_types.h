@@ -2,8 +2,9 @@
 #define SKETCH_TYPES_H_
 
 /* some forward declarations */
-typedef struct _sketch_line sketch_line_t;
-typedef struct _sketch_arc sketch_arc_t;
+typedef struct _coord_2D      coord_2D_t;
+typedef struct _sketch_line   sketch_line_t;
+typedef struct _sketch_arc    sketch_arc_t;
 typedef struct _sketch_circle sketch_circle_t;
 
 #include "constraint.h"
@@ -42,10 +43,10 @@ typedef struct _sketch_base {
 	color_t line_color;
 } sketch_base_t;
 
-typedef struct {
+struct _coord_2D {
 	double x;
 	double y;
-} coord_2D_t;
+};
 
 struct _sketch_line {
 	sketch_base_t base;

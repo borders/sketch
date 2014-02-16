@@ -33,28 +33,28 @@ int main(void)
 	pt2.y = -1.0;
 	sketch_line_init(l3, &pt1, &pt2);
 	
-	constraint_t *c1, *c2, *c3;
+	constraint_t *constraints[3];
 
-	c1 = constraint_alloc();
-	c2 = constraint_alloc();
-	c3 = constraint_alloc();
+	constraints[0] = constraint_alloc();
+	constraints[1] = constraint_alloc();
+	constraints[2] = constraint_alloc();
 
-	constraint_init_line_length(c1, l1, 2.0);
-	constraint_init_line_vert(c2, l2);
-	constraint_init_line_horiz(c3, l3);
+	constraint_init_line_length(constraints[0], l1, 2.0);
+	constraint_init_line_vert  (constraints[1], l2);
+	constraint_init_line_horiz (constraints[2], l3);
 
 	double cost;
 
-	cost = constraint_cost(c1);
+	cost = constraint_cost(constraints[0]);
 	printf("c1 cost: %lg\n", cost);
 
-	cost = constraint_cost(c1);
+	cost = constraint_cost(constraints[0]);
 	printf("c1 cost: %lg\n", cost);
 
-	cost = constraint_cost(c2);
+	cost = constraint_cost(constraints[1]);
 	printf("c2 cost: %lg\n", cost);
 	
-	cost = constraint_cost(c3);
+	cost = constraint_cost(constraints[2]);
 	printf("c3 cost: %lg\n", cost);
 	return 0;
 }
