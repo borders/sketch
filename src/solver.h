@@ -15,4 +15,6 @@ parm_map_t *parm_map_alloc(void);
 int parm_map_init(parm_map_t *self, const constraint_t *c[], int c_count);
 int parm_map_fini(parm_map_t *self);
 void parm_map_free(parm_map_t *self);
+
+void parm_map_print(parm_map_t *self, FILE *fp, constraint_t *c[], int c_count);
 #endif

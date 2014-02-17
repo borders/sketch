@@ -61,6 +61,8 @@ int main(void)
 	parm_map_init(map, constraints, 3);
 	printf("parm_map size: %d\n", map->size);
 
+	parm_map_print(map, stdout, constraints, 3);
+
 	return 0;
 }
 
