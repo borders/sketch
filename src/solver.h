@@ -6,6 +6,8 @@
 
 #define MAP_CAPACITY 100
 
+#define FDF 0
+
 struct _parm_map {
 	double *values[MAP_CAPACITY];
 	int size;
@@ -14,8 +16,13 @@ typedef struct _parm_map parm_map_t;
 
 struct _solver {
 	int size;
+#if FDF
 	gsl_multimin_fdfminimizer *s;
 	gsl_multimin_function_fdf func;
+#else
+	gsl_multimin_fminimizer *s;
+	gsl_multimin_function func;
+#endif
 	gsl_vector *x;
 	gsl_vector *x_0;
 	parm_map_t *map;

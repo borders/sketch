@@ -7,6 +7,19 @@
 static double 
 f_eval(const gsl_vector *v, void *params)
 {
+	int i;
+	solver_t *s = params;
+
+	// stuff parm values
+	for(i=0; i < s->size; i++) {
+		*(s->map->values[i]) = gsl_vector_get(v, i);
+	}
+
+	double cost = 0.0;
+	for(i=0; i < s->c_count; i++) {
+		cost += s->c[i]->cost(s->c[i]);
+	}
+
 	return 0.0;
 }
 
@@ -56,22 +69,39 @@ int solver_init(solver_t *self, constraint_t *c[], int c_count)
 	parm_map_init(self->map, (const constraint_t **)c, c_count);
 
 	self->size = self->map->size;
+
+#if FDF
 	self->s = gsl_multimin_fdfminimizer_alloc(
 			gsl_multimin_fdfminimizer_vector_bfgs2, self->size);
+#else
+	self->s = gsl_multimin_fminimizer_alloc(
+	             gsl_multimin_fminimizer_nmsimplex2, self->size);
+#endif
 	self->x = gsl_vector_alloc(self->size);
 	self->x_0 = gsl_vector_alloc(self->size);
 
 	// configure func struct
+	self->func.params = self;
 	self->func.n = self->size;
 	self->func.f = f_eval;
+#if FDF
 	self->func.df = df_eval;
 	self->func.fdf = fdf_eval;
-	self->func.params = self;
+#endif
 
+#if FDF
 	gsl_multimin_fdfminimizer_set(self->s, &(self->func), self->x, 0.01, 1e-4);
+#else
+	gsl_vector *step = gsl_vector_alloc(self->size);
+	for(i=0; i < self->size; i++) {
+		gsl_vector_set(step, i, 0.001);
+	}
+	gsl_multimin_fminimizer_set(self->s, &(self->func), self->x, step);
+	gsl_vector_free(step);
+#endif
 
 	// make the vector that will hold the initial parameter values
-	for(i=0; i < self->map->size; i++) {
+	for(i=0; i < self->size; i++) {
 		gsl_vector_set(self->x_0, i, *(self->map->values[i]) );
 	}
 	
