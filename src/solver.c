@@ -1,7 +1,39 @@
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "solver.h"
 #include "utils.h"
+
+solver_t *solver_alloc(int size)
+{
+	solver_t *self = calloc(1, sizeof(solver_t));
+	if(self == NULL) {
+		ERROR("Out of memory");
+		return NULL;
+	}
+
+	self->size = size;
+	self->s = gsl_multimin_fdfminimizer_alloc(
+			gsl_multimin_fdfminimizer_vector_bfgs2, size);
+	self->x = gsl_vector_alloc(size);
+
+	return self;
+}
+
+int solver_init(solver_t *self)
+{
+	gsl_multimin_fdfminimizer_set(self->s, &(self->func), self->x, 0.01, 1e-4);
+}
+
+void solver_free(solver_t *self)
+{
+	free(self);
+}
+
+int solver_fini(solver_t *self)
+{
+	return 0;
+}
 
 parm_map_t *parm_map_alloc(void)
 {
