@@ -6,22 +6,26 @@
 
 #define MAP_CAPACITY 100
 
-struct _solver {
-	int size;
-	gsl_multimin_fdfminimizer *s;
-	gsl_multimin_function_fdf func;
-	gsl_vector *x;
-};
-typedef struct _solver solver_t;
-
 struct _parm_map {
 	double *values[MAP_CAPACITY];
 	int size;
 };
 typedef struct _parm_map parm_map_t;
 
-solver_t *solver_alloc(int size);
-int solver_init(solver_t *self);
+struct _solver {
+	int size;
+	gsl_multimin_fdfminimizer *s;
+	gsl_multimin_function_fdf func;
+	gsl_vector *x;
+	gsl_vector *x_0;
+	parm_map_t *map;
+	constraint_t **c;
+	int c_count;
+};
+typedef struct _solver solver_t;
+
+solver_t *solver_alloc(void);
+int solver_init(solver_t *self, constraint_t *c[], int c_count);
 int solver_fini(solver_t *self);
 void solver_free(solver_t *self);
 

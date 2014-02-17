@@ -56,12 +56,17 @@ int main(void)
 	cost = constraint_cost(constraints[2]);
 	printf("c3 cost: %lg\n", cost);
 
+#if 0
 	parm_map_t *map;
 	map = parm_map_alloc();
 	parm_map_init(map, constraints, 3);
 	printf("parm_map size: %d\n", map->size);
-
 	parm_map_print(map, stdout, constraints, 3);
+#endif
+	solver_t *solver;
+	solver = solver_alloc();
+	solver_init(solver, constraints, 3);
+
 
 	return 0;
 }

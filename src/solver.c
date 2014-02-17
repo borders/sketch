@@ -4,7 +4,30 @@
 #include "solver.h"
 #include "utils.h"
 
-solver_t *solver_alloc(int size)
+static double 
+f_eval(const gsl_vector *v, void *params)
+{
+	return 0.0;
+}
+
+static void 
+df_eval(const gsl_vector *v, void *params, gsl_vector *df)
+{
+	int i;
+	solver_t *s = params;
+	for(i=0; i < s->size; i++) {
+		gsl_vector_set(df, i, 0.0);
+	}
+}
+
+static void 
+fdf_eval(const gsl_vector *x, void *params, double *f, gsl_vector *df) 
+{
+	*f = f_eval(x, params);
+	df_eval(x, params, df);
+}
+
+solver_t *solver_alloc(void)
 {
 	solver_t *self = calloc(1, sizeof(solver_t));
 	if(self == NULL) {
@@ -12,17 +35,47 @@ solver_t *solver_alloc(int size)
 		return NULL;
 	}
 
-	self->size = size;
-	self->s = gsl_multimin_fdfminimizer_alloc(
-			gsl_multimin_fdfminimizer_vector_bfgs2, size);
-	self->x = gsl_vector_alloc(size);
-
+	self->map = parm_map_alloc();
+	if(self->map == NULL) {
+		free(self);
+		ERROR("Out of memory");
+		return NULL;
+	}
 	return self;
 }
 
-int solver_init(solver_t *self)
+int solver_init(solver_t *self, constraint_t *c[], int c_count)
 {
+	int i;
+
+	// store references to constraints
+	self->c = c;
+	self->c_count = c_count;
+
+	// initialize the parm_map, which will determine the size of the solver
+	parm_map_init(self->map, (const constraint_t **)c, c_count);
+
+	self->size = self->map->size;
+	self->s = gsl_multimin_fdfminimizer_alloc(
+			gsl_multimin_fdfminimizer_vector_bfgs2, self->size);
+	self->x = gsl_vector_alloc(self->size);
+	self->x_0 = gsl_vector_alloc(self->size);
+
+	// configure func struct
+	self->func.n = self->size;
+	self->func.f = f_eval;
+	self->func.df = df_eval;
+	self->func.fdf = fdf_eval;
+	self->func.params = self;
+
 	gsl_multimin_fdfminimizer_set(self->s, &(self->func), self->x, 0.01, 1e-4);
+
+	// make the vector that will hold the initial parameter values
+	for(i=0; i < self->map->size; i++) {
+		gsl_vector_set(self->x_0, i, *(self->map->values[i]) );
+	}
+	
+	return 0;
 }
 
 void solver_free(solver_t *self)
