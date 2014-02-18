@@ -35,6 +35,7 @@ solver_t *solver_alloc(void);
 int solver_init(solver_t *self, constraint_t *c[], int c_count);
 int solver_fini(solver_t *self);
 void solver_free(solver_t *self);
+int solver_solve(solver_t *self);
 
 
 parm_map_t *parm_map_alloc(void);

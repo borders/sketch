@@ -67,6 +67,7 @@ int main(void)
 	solver = solver_alloc();
 	solver_init(solver, constraints, 3);
 
+	solver_solve(solver);
 
 	return 0;
 }

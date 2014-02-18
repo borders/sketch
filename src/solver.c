@@ -57,6 +57,37 @@ solver_t *solver_alloc(void)
 	return self;
 }
 
+int solver_solve(solver_t *self)
+{
+	int status = 0;
+	int iter = 0;
+
+	while(iter < 100) {
+		#if FDF
+			status = gsl_multimin_fdfminimizer_iterate(self->s);
+		#else
+			status = gsl_multimin_fminimizer_iterate(self->s);
+		#endif
+		if(status != 0) {
+			ERROR("gsl_iterate() returned error");
+			break;
+		}
+		#if FDF
+			if(self->s->f < 0.1) {
+				printf("satisfied stoppping criterion!\n");
+				break;
+			}
+		#else
+			if(self->s->fval < 0.1) {
+				printf("satisfied stoppping criterion!\n");
+				break;
+			}
+		#endif
+		iter++;
+	}
+	
+}
+
 int solver_init(solver_t *self, constraint_t *c[], int c_count)
 {
 	int i;
