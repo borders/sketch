@@ -15,13 +15,10 @@ static void print_parms(gsl_vector *v)
 	}
 }
 
-static double 
-f_eval(const gsl_vector *v, void *params)
+static double f_eval(const gsl_vector *v, void *params)
 {
 	int i;
 	solver_t *s = params;
-	printf("f_eval():\n");
-	print_parms(v);
 
 	// stuff parm values
 	for(i=0; i < s->size; i++) {
@@ -36,8 +33,7 @@ f_eval(const gsl_vector *v, void *params)
 	return cost;
 }
 
-static void 
-df_eval(const gsl_vector *v, void *params, gsl_vector *df)
+static void df_eval(const gsl_vector *v, void *params, gsl_vector *df)
 {
 	int i;
 	solver_t *s = params;
@@ -46,8 +42,7 @@ df_eval(const gsl_vector *v, void *params, gsl_vector *df)
 	}
 }
 
-static void 
-fdf_eval(const gsl_vector *x, void *params, double *f, gsl_vector *df) 
+static void fdf_eval(const gsl_vector *x, void *params, double *f, gsl_vector *df) 
 {
 	*f = f_eval(x, params);
 	df_eval(x, params, df);
@@ -76,9 +71,6 @@ int solver_solve(solver_t *self)
 	int iter = 0;
 
 	while(iter < MAX_ITERATIONS) {
-		printf("solver_iteration %d\n", iter);
-		print_parms(self->s->x);
-
 		#if FDF
 			status = gsl_multimin_fdfminimizer_iterate(self->s);
 		#else
@@ -88,14 +80,17 @@ int solver_solve(solver_t *self)
 			ERROR("gsl_iterate() returned error");
 			break;
 		}
+
 		#if FDF
-			printf("cost = %g\n", self->s->f);
+			printf("*** iteration=%d, cost=%g\n", iter, self->s->f);
+			print_parms(self->s->x);
 			if(self->s->f < STOP_THRESH) {
 				printf("satisfied stoppping criterion!\n");
 				break;
 			}
 		#else
-			printf("cost = %g\n", self->s->fval);
+			printf("*** iteration=%d, cost=%g\n", iter, self->s->fval);
+			print_parms(self->s->x);
 			if(self->s->fval < STOP_THRESH) {
 				printf("satisfied stoppping criterion!\n");
 				break;
