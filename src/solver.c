@@ -4,11 +4,24 @@
 #include "solver.h"
 #include "utils.h"
 
+#define MAX_ITERATIONS 2000
+#define STOP_THRESH 0.0001
+
+static void print_parms(gsl_vector *v)
+{
+	int i;
+	for(i=0; i < v->size; i++) {
+		printf("parm %d: %g\n", i, gsl_vector_get(v,i));
+	}
+}
+
 static double 
 f_eval(const gsl_vector *v, void *params)
 {
 	int i;
 	solver_t *s = params;
+	printf("f_eval():\n");
+	print_parms(v);
 
 	// stuff parm values
 	for(i=0; i < s->size; i++) {
@@ -20,7 +33,7 @@ f_eval(const gsl_vector *v, void *params)
 		cost += s->c[i]->cost(s->c[i]);
 	}
 
-	return 0.0;
+	return cost;
 }
 
 static void 
@@ -62,7 +75,10 @@ int solver_solve(solver_t *self)
 	int status = 0;
 	int iter = 0;
 
-	while(iter < 100) {
+	while(iter < MAX_ITERATIONS) {
+		printf("solver_iteration %d\n", iter);
+		print_parms(self->s->x);
+
 		#if FDF
 			status = gsl_multimin_fdfminimizer_iterate(self->s);
 		#else
@@ -73,12 +89,14 @@ int solver_solve(solver_t *self)
 			break;
 		}
 		#if FDF
-			if(self->s->f < 0.1) {
+			printf("cost = %g\n", self->s->f);
+			if(self->s->f < STOP_THRESH) {
 				printf("satisfied stoppping criterion!\n");
 				break;
 			}
 		#else
-			if(self->s->fval < 0.1) {
+			printf("cost = %g\n", self->s->fval);
+			if(self->s->fval < STOP_THRESH) {
 				printf("satisfied stoppping criterion!\n");
 				break;
 			}
@@ -111,6 +129,16 @@ int solver_init(solver_t *self, constraint_t *c[], int c_count)
 	self->x = gsl_vector_alloc(self->size);
 	self->x_0 = gsl_vector_alloc(self->size);
 
+	// make the vector that will hold the initial parameter values
+	for(i=0; i < self->size; i++) {
+		gsl_vector_set(self->x_0, i, *(self->map->values[i]) );
+	}
+	
+	// fill x vector with initial values
+	for(i=0; i < self->size; i++) {
+		gsl_vector_set(self->x, i, gsl_vector_get(self->x_0, i));
+	}
+
 	// configure func struct
 	self->func.params = self;
 	self->func.n = self->size;
@@ -120,22 +148,18 @@ int solver_init(solver_t *self, constraint_t *c[], int c_count)
 	self->func.fdf = fdf_eval;
 #endif
 
+
 #if FDF
 	gsl_multimin_fdfminimizer_set(self->s, &(self->func), self->x, 0.01, 1e-4);
 #else
 	gsl_vector *step = gsl_vector_alloc(self->size);
 	for(i=0; i < self->size; i++) {
-		gsl_vector_set(step, i, 0.001);
+		gsl_vector_set(step, i, 0.004);
 	}
 	gsl_multimin_fminimizer_set(self->s, &(self->func), self->x, step);
 	gsl_vector_free(step);
 #endif
 
-	// make the vector that will hold the initial parameter values
-	for(i=0; i < self->size; i++) {
-		gsl_vector_set(self->x_0, i, *(self->map->values[i]) );
-	}
-	
 	return 0;
 }
 
