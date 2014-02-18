@@ -5,7 +5,7 @@
 #include "utils.h"
 
 #define MAX_ITERATIONS 2000
-#define STOP_THRESH 0.0001
+#define STOP_THRESH 0.000001
 
 static void print_parms(gsl_vector *v)
 {
@@ -154,7 +154,7 @@ int solver_init(solver_t *self, constraint_t *c[], int c_count)
 #else
 	gsl_vector *step = gsl_vector_alloc(self->size);
 	for(i=0; i < self->size; i++) {
-		gsl_vector_set(step, i, 0.004);
+		gsl_vector_set(step, i, 0.01);
 	}
 	gsl_multimin_fminimizer_set(self->s, &(self->func), self->x, step);
 	gsl_vector_free(step);
