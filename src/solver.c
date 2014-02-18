@@ -98,7 +98,7 @@ int solver_solve(solver_t *self)
 		#endif
 		iter++;
 	}
-	
+	return 0;
 }
 
 int solver_init(solver_t *self, constraint_t *c[], int c_count)
@@ -284,4 +284,5 @@ int parm_map_init(parm_map_t *self, const constraint_t *c[], int c_count)
 		}
 		
 	}
+	return 0;
 }
