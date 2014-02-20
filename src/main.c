@@ -5,6 +5,12 @@
 #include "sketch_types.h"
 #include "solver.h"
 
+int iterate_cb(int i, void *data)
+{
+	printf("iterate_cb: %d\n", i);
+	return 0;
+}
+
 int main(void) 
 {
 	coord_2D_t pt1, pt2;
@@ -66,6 +72,7 @@ int main(void)
 	solver_t *solver;
 	solver = solver_alloc();
 	solver_init(solver, constraints, 3);
+	solver_set_iterate_cb(solver, &iterate_cb, (void*)solver);
 
 	solver_solve(solver);
 

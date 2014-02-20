@@ -8,11 +8,16 @@
 
 #define FDF 0
 
+#define MAX_ITERATIONS 2000
+#define STOP_THRESH 1.0e-10
+
 struct _parm_map {
 	double *values[MAP_CAPACITY];
 	int size;
 };
 typedef struct _parm_map parm_map_t;
+
+typedef int iterate_cb_t(int i, void *data);
 
 struct _solver {
 	int size;
@@ -28,6 +33,9 @@ struct _solver {
 	parm_map_t *map;
 	constraint_t **c;
 	int c_count;
+
+	iterate_cb_t *iterate_cb;
+	void *iterate_cb_data;
 };
 typedef struct _solver solver_t;
 
@@ -37,6 +45,7 @@ int solver_fini(solver_t *self);
 void solver_free(solver_t *self);
 int solver_solve(solver_t *self);
 
+int solver_set_iterate_cb(solver_t *self, iterate_cb_t *cb, void *data);
 
 parm_map_t *parm_map_alloc(void);
 int parm_map_init(parm_map_t *self, const constraint_t *c[], int c_count);

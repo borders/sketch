@@ -4,9 +4,6 @@
 #include "solver.h"
 #include "utils.h"
 
-#define MAX_ITERATIONS 2000
-#define STOP_THRESH 0.000001
-
 static void print_parms(gsl_vector *v)
 {
 	int i;
@@ -96,6 +93,11 @@ int solver_solve(solver_t *self)
 				break;
 			}
 		#endif
+
+		// call the iterate callback function (if one is specified)
+		if(self->iterate_cb) {
+			self->iterate_cb(iter, self->iterate_cb_data);
+		}
 		iter++;
 	}
 	return 0;
@@ -155,6 +157,9 @@ int solver_init(solver_t *self, constraint_t *c[], int c_count)
 	gsl_vector_free(step);
 #endif
 
+	self->iterate_cb = NULL;
+	self->iterate_cb_data = NULL;
+
 	return 0;
 }
 
@@ -165,6 +170,13 @@ void solver_free(solver_t *self)
 
 int solver_fini(solver_t *self)
 {
+	return 0;
+}
+
+int solver_set_iterate_cb(solver_t *self, iterate_cb_t *cb, void *data)
+{
+	self->iterate_cb = cb;
+	self->iterate_cb_data = data;
 	return 0;
 }
 
