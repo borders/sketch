@@ -79,17 +79,17 @@ int solver_solve(solver_t *self)
 		}
 
 		#if FDF
-			printf("*** iteration=%d, cost=%g\n", iter, self->s->f);
-			print_parms(self->s->x);
+			//printf("*** iteration=%d, cost=%g\n", iter, self->s->f);
+			//print_parms(self->s->x);
 			if(self->s->f < STOP_THRESH) {
-				printf("satisfied stoppping criterion!\n");
+				//printf("satisfied stoppping criterion!\n");
 				break;
 			}
 		#else
-			printf("*** iteration=%d, cost=%g\n", iter, self->s->fval);
-			print_parms(self->s->x);
+			//printf("*** iteration=%d, cost=%g\n", iter, self->s->fval);
+			//print_parms(self->s->x);
 			if(self->s->fval < STOP_THRESH) {
-				printf("satisfied stoppping criterion!\n");
+				//printf("satisfied stoppping criterion!\n");
 				break;
 			}
 		#endif

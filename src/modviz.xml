@@ -1,0 +1,43 @@
+<modviz_config x_min="-1" x_max="+11" y_min="-1" y_max="+10" >
+
+	<ball name="line1_v1" id="1" radius="0.1" x="0" y="0" filled="true" color="red" />
+	<ball name="line1_v2" id="2" radius="0.1" x="0" y="0" filled="true" color="blue" />
+	<connector name="line1_segment" id="101" type="line" line_width="2.0" color="black">
+		<attach id="1" x="0.0" y="0.0" />
+		<attach id="2" x="0.0" y="0.0" />
+	</connector>
+
+	<ball name="line2_v1" id="3" radius="0.1" x="0" y="0" filled="true" color="red" />
+	<ball name="line2_v2" id="4" radius="0.1" x="0" y="0" filled="true" color="blue" />
+	<connector name="line2_segment" id="102" type="line" line_width="2.0" color="black">
+		<attach id="3" x="0.0" y="0.0" />
+		<attach id="4" x="0.0" y="0.0" />
+	</connector>
+
+	<ball name="line3_v1" id="5" radius="0.1" x="0" y="0" filled="true" color="red" />
+	<ball name="line3_v2" id="6" radius="0.1" x="0" y="0" filled="true" color="blue" />
+	<connector name="line3_segment" id="103" type="line" line_width="2.0" color="black">
+		<attach id="5" x="0.0" y="0.0" />
+		<attach id="6" x="0.0" y="0.0" />
+	</connector>
+
+	<input_format>
+		<map column="1" type="time" />
+
+		<map column="2" type="body" id="1" field="x" />
+		<map column="3" type="body" id="1" field="y" />
+		<map column="4" type="body" id="2" field="x" />
+		<map column="5" type="body" id="2" field="y" />
+
+		<map column="6" type="body" id="3" field="x" />
+		<map column="7" type="body" id="3" field="y" />
+		<map column="8" type="body" id="4" field="x" />
+		<map column="9" type="body" id="4" field="y" />
+
+		<map column="10" type="body" id="5" field="x" />
+		<map column="11" type="body" id="5" field="y" />
+		<map column="12" type="body" id="6" field="x" />
+		<map column="13" type="body" id="6" field="y" />
+	</input_format>
+
+</modviz_config>
