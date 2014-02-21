@@ -57,6 +57,20 @@ static double cost_line_vert(constraint_t *self)
 	return (err*err);
 }
 
+
+static double cost_p_p_coinc(constraint_t *self)
+{
+	/*
+		x1 = x2
+		y1 = y2
+
+		C = (x2-x1)^2 + (y2-y1)^2
+	*/
+	double dx = self->point2->x - self->point1->x;
+	double dy = self->point2->y - self->point1->y;
+	return (dx*dx + dy*dy);
+}
+
 static double cost_dummy(constraint_t *self)
 {
 	return 0.0;
@@ -86,6 +100,9 @@ int constraint_init(constraint_t *self, constraint_type_t type)
 			break;
 		case CT_LINE_VERT:
 			self->cost = &cost_line_vert;
+			break;
+		case CT_POINT_POINT_COINCIDENT:
+			self->cost = &cost_p_p_coinc;
 			break;
 		default:
 			self->cost = &cost_dummy;
@@ -137,5 +154,15 @@ int constraint_init_line_vert(constraint_t *self, sketch_line_t *line)
 	if (ret != 0)
 		return ret;
 	self->line1 = line;
+	return 0;
+}
+
+int constraint_init_p_p_coinc(constraint_t *self, coord_2D_t *p1, coord_2D_t *p2)
+{
+	int ret = constraint_init(self, CT_POINT_POINT_COINCIDENT);
+	if (ret != 0)
+		return ret;
+	self->point1 = p1;
+	self->point2 = p2;
 	return 0;
 }

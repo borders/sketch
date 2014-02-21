@@ -48,15 +48,21 @@ int main(void)
 	pt2.y = -1.0;
 	sketch_line_init(lines[2], &pt1, &pt2);
 	
-	constraint_t *constraints[3];
+	constraint_t *constraints[4];
 
 	constraints[0] = constraint_alloc();
 	constraints[1] = constraint_alloc();
 	constraints[2] = constraint_alloc();
+	constraints[3] = constraint_alloc();
 
 	constraint_init_line_length(constraints[0], lines[0], 2.0);
-	constraint_init_line_vert  (constraints[1], lines[1]);
-	constraint_init_line_horiz (constraints[2], lines[2]);
+	constraint_init_line_vert(  constraints[1], lines[1]);
+	constraint_init_line_horiz( constraints[2], lines[2]);
+	constraint_init_p_p_coinc(  
+		constraints[3], 
+		&(lines[0]->v1), 
+		&(lines[1]->v2)
+	);
 
 	double cost;
 
@@ -76,7 +82,7 @@ int main(void)
 
 	solver_t *solver;
 	solver = solver_alloc();
-	solver_init(solver, constraints, 3);
+	solver_init(solver, constraints, 4);
 	solver_set_iterate_cb(solver, &iterate_cb, (void*)solver);
 
 	solver_solve(solver);
