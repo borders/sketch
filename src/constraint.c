@@ -71,6 +71,26 @@ static double cost_p_p_coinc(constraint_t *self)
 	return (dx*dx + dy*dy);
 }
 
+static double cost_p_p_dist(constraint_t *self)
+{
+	/*
+		sqrt( (x2-x1)^2 + (y2-y1)^2 ) = L
+	*/
+	double dx = self->point2->x - self->point1->x;
+	double dy = self->point2->y - self->point1->y;
+	double L = sqrt(dx * dx + dy * dy);
+	double err = self->arg1 - L;
+	return (err*err);
+}
+
+static double cost_l_l_angle(constraint_t *self)
+{
+	/*
+		A . B = |A| * |B| * cos(q) 
+	*/
+	return (0.0);
+}
+
 static double cost_dummy(constraint_t *self)
 {
 	return 0.0;
@@ -103,6 +123,12 @@ int constraint_init(constraint_t *self, constraint_type_t type)
 			break;
 		case CT_POINT_POINT_COINCIDENT:
 			self->cost = &cost_p_p_coinc;
+			break;
+		case CT_POINT_POINT_DIST:
+			self->cost = &cost_p_p_dist;
+			break;
+		case CT_LINE_LINE_ANGLE:
+			self->cost = &cost_l_l_angle;
 			break;
 		default:
 			self->cost = &cost_dummy;
@@ -164,5 +190,16 @@ int constraint_init_p_p_coinc(constraint_t *self, coord_2D_t *p1, coord_2D_t *p2
 		return ret;
 	self->point1 = p1;
 	self->point2 = p2;
+	return 0;
+}
+
+int constraint_init_p_p_dist(constraint_t *self, coord_2D_t *p1, coord_2D_t *p2, double dist)
+{
+	int ret = constraint_init(self, CT_POINT_POINT_DIST);
+	if (ret != 0)
+		return ret;
+	self->point1 = p1;
+	self->point2 = p2;
+	self->arg1 = dist;
 	return 0;
 }
