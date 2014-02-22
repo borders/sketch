@@ -4,6 +4,7 @@
 #include "constraint.h"
 #include "sketch_types.h"
 #include "solver.h"
+#include "gui.h"
 
 sketch_line_t *lines[3];
 
@@ -86,6 +87,10 @@ int main(void)
 	solver_set_iterate_cb(solver, &iterate_cb, (void*)solver);
 
 	solver_solve(solver);
+
+	gui_t gui;
+	gui_init(&gui, NULL, NULL);
+	gui_run(&gui);
 
 	return 0;
 }

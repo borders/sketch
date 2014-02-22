@@ -18,6 +18,9 @@ AC_CHECK_HEADERS([stdlib.h string.h])
 
 # Checks for library functions.
 
+
+PKG_CHECK_MODULES(GTK2, gtk+-2.0 >= 1.0)
+
 AC_CONFIG_FILES([Makefile \
                  src/Makefile])
 AC_OUTPUT
