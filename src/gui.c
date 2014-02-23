@@ -6,6 +6,7 @@
 #include <gtk/gtk.h>
 
 #include "gui.h"
+#include "main.h"
 
 static void select_cb(GtkButton *b, gpointer data)
 {
@@ -37,6 +38,11 @@ gboolean draw_canvas(GtkWidget *widget, GdkEventExpose *event, gpointer data)
    draw_set_color(dp, 1,1,1);
    draw_set_line_width(dp, 1);
    draw_rectangle_filled(dp, 0, 0, width, height);
+
+	// draw sketch objects
+	for(i = 0; i < app_data.sketch_count; i++) {
+		printf("drawing sketch object %d of %d...\n", i+1, app_data.sketch_count);
+	}
 
    draw_finish(dp);
    return TRUE;

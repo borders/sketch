@@ -5,8 +5,14 @@
 #include "sketch_types.h"
 #include "solver.h"
 #include "gui.h"
+#include "main.h"
 
 sketch_line_t *lines[3];
+
+app_data_t app_data = {
+	{0}, 0,
+	{0}, 0
+};
 
 int iterate_cb(int i, void *data)
 {
