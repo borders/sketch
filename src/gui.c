@@ -24,7 +24,22 @@ static void arc_cb(GtkButton *b, gpointer data)
 
 gboolean draw_canvas(GtkWidget *widget, GdkEventExpose *event, gpointer data) 
 {
+	gui_t *gui = (gui_t *)data;
 	printf("drawing canvas...\n");
+   draw_ptr dp = gui->drawer;
+   draw_start(dp);
+   int i;
+
+   float width, height;
+   draw_get_canvas_dims(dp, &width, &height);
+
+   // first, fill with background color
+   draw_set_color(dp, 1,1,1);
+   draw_set_line_width(dp, 1);
+   draw_rectangle_filled(dp, 0, 0, width, height);
+
+   draw_finish(dp);
+   return TRUE;
 }
 
 int gui_init(gui_t *self, int *argc, char ***argv)
@@ -43,26 +58,29 @@ int gui_init(gui_t *self, int *argc, char ***argv)
 
 	/* Select Button */
 	bb->select_btn = gtk_button_new_with_label("Select");
-	gtk_box_pack_start(GTK_BOX(bb->hbox), bb->select_btn, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(bb->hbox), bb->select_btn, FALSE, FALSE, 0);
 	g_signal_connect(bb->select_btn, "clicked", G_CALLBACK(select_cb), NULL);
 
 	/* Line Button */
 	bb->line_btn = gtk_button_new_with_label("Line");
-	gtk_box_pack_start(GTK_BOX(bb->hbox), bb->line_btn, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(bb->hbox), bb->line_btn, FALSE, FALSE, 0);
 	g_signal_connect(bb->line_btn, "clicked", G_CALLBACK(line_cb), NULL);
 
 	/* Arc Button */
 	bb->arc_btn = gtk_button_new_with_label("Arc");
-	gtk_box_pack_start(GTK_BOX(bb->hbox), bb->arc_btn, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(bb->hbox), bb->arc_btn, FALSE, FALSE, 0);
 	g_signal_connect(bb->arc_btn, "clicked", G_CALLBACK(arc_cb), NULL);
 
 	/* Canvas */
    self->canvas = gtk_drawing_area_new();
    gtk_widget_set_size_request(self->canvas, 500,400);
    g_signal_connect(self->canvas, "expose_event", G_CALLBACK(draw_canvas), 
-	                 NULL);
+	                 self);
 	gtk_box_pack_start(GTK_BOX(self->top_level_vbox), self->canvas, 
 	                   TRUE, TRUE, 0);
+
+	/* drawing "context" */
+	self->drawer = draw_create(self->canvas);
 
 	/* Status Bar */
 	sb->hbox = gtk_hbox_new(FALSE, 10);

@@ -2,6 +2,7 @@
 #define GUI_H_
 
 #include <gtk/gtk.h>
+#include "draw.h"
 
 struct _button_bar {
 	GtkWidget *hbox;
@@ -17,6 +18,7 @@ struct _status_bar {
 };
 
 struct _gui {
+	draw_ptr drawer;
 	GtkWidget *window;
 	GtkWidget *top_level_vbox;
 	GtkWidget *canvas;
