@@ -181,7 +181,7 @@ int gui_init(gui_t *self, int *argc, char ***argv)
    gtk_container_add(GTK_CONTAINER (self->window), self->top_level_vbox);
 
 	bb->hbox = gtk_hbox_new(FALSE, 1);
-	gtk_box_pack_start(GTK_BOX(self->top_level_vbox), bb->hbox, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(self->top_level_vbox), bb->hbox, FALSE, FALSE, 0);
 
 	/* Select Button */
 	bb->select_btn = gtk_button_new_with_label("Select");
