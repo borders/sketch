@@ -7,6 +7,7 @@
 
 #include "gui.h"
 #include "main.h"
+#include "sketch_types.h"
 
 static void select_cb(GtkButton *b, gpointer data)
 {
@@ -53,6 +54,16 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
 				printf("  start: (%g,%g)  end: (%g,%g)\n",
 				       gui->state.start_x, gui->state.start_y,
 				       end_x, end_y);
+
+				sketch_line_t *line = sketch_line_alloc();
+				app_data.sketch[app_data.sketch_count++] = (sketch_base_t *)line;
+				coord_2D_t start, end;
+				start.x = gui->state.start_x;
+				start.y = gui->state.start_y;
+				end.x = end_x;
+				end.y = end_y;
+				sketch_line_init(line, &start, &end);
+
 				gui->state.draw_active = false;
 				break;
 			default:	
@@ -130,7 +141,20 @@ gboolean draw_canvas(GtkWidget *widget, GdkEventExpose *event, gpointer data)
 
 	// draw sketch objects
 	for(i = 0; i < app_data.sketch_count; i++) {
-		printf("drawing sketch object %d of %d...\n", i+1, app_data.sketch_count);
+		//printf("drawing sketch object %d of %d...\n", i+1, app_data.sketch_count);
+		sketch_base_t *obj = app_data.sketch[i];
+		switch(obj->type) {
+		case SHAPE_TYPE_LINE: {
+			sketch_line_t *line = (sketch_line_t *)obj;
+			draw_line(dp, 
+			          line->v1.x, line->v1.y, 
+			          line->v2.x, line->v2.y
+			);
+			break;
+		}
+		case SHAPE_TYPE_ARC:
+			break;
+		}
 	}
 
    draw_finish(dp);
