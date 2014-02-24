@@ -1,8 +1,16 @@
 #if !defined(GUI_H_)
 #define GUI_H_
 
+#include <stdbool.h>
+
 #include <gtk/gtk.h>
 #include "draw.h"
+
+typedef enum {
+	TOOL_NONE,
+	TOOL_LINE,
+	TOOL_ARC
+} tool_t;
 
 struct _button_bar {
 	GtkWidget *hbox;
@@ -17,6 +25,15 @@ struct _status_bar {
 	GtkWidget *right_label;
 };
 
+struct _state {
+	bool draw_active;
+	tool_t active_tool;
+	double start_x;
+	double start_y;
+	double end_x;
+	double end_y;
+};
+
 struct _gui {
 	draw_ptr drawer;
 	GtkWidget *window;
@@ -24,6 +41,8 @@ struct _gui {
 	GtkWidget *canvas;
 	struct _button_bar button_bar;
 	struct _status_bar status_bar;
+	
+	struct _state state;
 };
 
 typedef struct _gui gui_t;
