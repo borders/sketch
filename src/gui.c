@@ -33,21 +33,44 @@ static void arc_cb(GtkButton *b, gpointer data)
 	gui->state.active_tool = TOOL_ARC;
 }
 
+static int select_sketch_line(sketch_line_t *s, double x, double y)
+{
+	return 0;
+}
+
+static void select_sketch_object(double x, double y)
+{
+	int i;
+	int quit = 0;
+	for(i=0; i<app_data.sketch_count; i++) {
+		sketch_base_t *s = app_data.sketch[i];
+		switch(s->type) {
+		case SHAPE_TYPE_LINE:
+			if(select_sketch_line((sketch_line_t *)s, x, y)) {
+				return;
+			}
+			break;
+		case SHAPE_TYPE_ARC:
+			printf("Arc not yet supported as selections\n");
+			break;
+		default:
+			printf("Unsupported shape type!\n");
+		}
+	}
+}
+
 gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
 	gui_t *gui = (gui_t *)data;
-	//printf("mouse button callback!\n");
 	switch(event->type) {
 	case GDK_BUTTON_PRESS:
-		//printf("  button pressed\n");
 
 		if(gui->state.draw_active) {
 			switch(gui->state.active_tool) {
 			case TOOL_NONE:
 				printf("Shouldn't be here!\n");
 				break;
-			case TOOL_LINE:
-				printf("TODO: finish a line (create a line object)\n");
+			case TOOL_LINE: {
 				double end_x, end_y;
 				end_x = event->x;
 				end_y = event->y;
@@ -66,16 +89,18 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
 
 				gui->state.draw_active = false;
 				break;
+			}
 			default:	
 				printf("Unsupported tool!\n");
 			}
 		} else {
 			switch(gui->state.active_tool) {
 			case TOOL_NONE:
-				printf("TODO: select something...\n");
+				// Select a sketch object
+				select_sketch_object(event->x, event->y);
 				break;
 			case TOOL_LINE:
-				printf("TODO: start a line...\n");
+				// Start of a line
 				gui->state.draw_active = true;
 				gui->state.start_x = event->x;
 				gui->state.start_y = event->y;
