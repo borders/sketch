@@ -9,6 +9,7 @@
 #include "main.h"
 #include "sketch_types.h"
 
+
 static void select_cb(GtkButton *b, gpointer data)
 {
 	gui_t *gui = (gui_t *)data;
@@ -86,8 +87,8 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
 				end.x = end_x;
 				end.y = end_y;
 				sketch_line_init(line, &start, &end);
-
 				gui->state.draw_active = false;
+				gtk_widget_queue_draw(gui->canvas);
 				break;
 			}
 			default:	
@@ -148,14 +149,14 @@ gboolean draw_canvas(GtkWidget *widget, GdkEventExpose *event, gpointer data)
 
    // first, fill with background color
    draw_set_color(dp, 1,1,1);
-   draw_set_line_width(dp, 1);
    draw_rectangle_filled(dp, 0, 0, width, height);
 
 	// draw the active line/arc, if there is one
 	if(gui->state.draw_active) {
+		draw_set_line_width(dp, 1);
+		draw_set_color(dp, 0,0,1);
 		switch(gui->state.active_tool) {
 		case TOOL_LINE:
-			draw_set_color(dp, 0,0,1);
 			draw_line(dp, 
 			          gui->state.start_x, gui->state.start_y, 
 			          gui->state.end_x, gui->state.end_y
@@ -165,6 +166,8 @@ gboolean draw_canvas(GtkWidget *widget, GdkEventExpose *event, gpointer data)
 	}
 
 	// draw sketch objects
+	draw_set_line_width(dp, 2);
+   draw_set_color(dp, 0,0,1);
 	for(i = 0; i < app_data.sketch_count; i++) {
 		//printf("drawing sketch object %d of %d...\n", i+1, app_data.sketch_count);
 		sketch_base_t *obj = app_data.sketch[i];

@@ -14,6 +14,7 @@ typedef enum {
 
 struct _button_bar {
 	GtkWidget *hbox;
+
 	GtkWidget *select_btn;
 	GtkWidget *line_btn;
 	GtkWidget *arc_btn;
