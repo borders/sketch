@@ -44,7 +44,7 @@ void point_rotate(double x, double y, double theta, double *xp, double *yp)
 	*yp = -x * sq + y * cq;
 }
 
-static int select_sketch_line(sketch_line_t *s, double x, double y)
+static int sketch_line_is_pt_near(sketch_line_t *s, double x, double y)
 {
 	coord_2D_t point;
 	double theta, len;
@@ -57,27 +57,27 @@ static int select_sketch_line(sketch_line_t *s, double x, double y)
 	point_rotate(x, y, theta, &x_m_p, &y_m_p);
 
 	if(x_m_p >= xp1 && x_m_p <= xp2 && y_m_p < (yp+5) && y_m_p > (yp-5)) {
-		//printf("in bounding box!\n");
 		return 1;
 	}
 	return 0;
 }
 
+static int select_sketch_line(sketch_line_t *s, double x, double y)
+{
+	int changed = 0;
+
+	if( sketch_line_is_pt_near(s, x, y)) {
+		changed = 1;
+		s->base.is_selected = !s->base.is_selected;
+	}
+	return changed;
+}
+
 static int highlight_sketch_line(sketch_line_t *s, double x, double y)
 {
 	int changed = 0;
-	coord_2D_t point;
-	double theta, len;
-	sketch_line_get_point_angle_len(s, &point, &theta, &len);
-	double xp1, xp2, yp;
-	point_rotate(point.x, point.y, theta, &xp1, &yp);
-	xp2 = xp1 + len;
-	
-	double x_m_p, y_m_p;
-	point_rotate(x, y, theta, &x_m_p, &y_m_p);
 
-	if(x_m_p >= xp1 && x_m_p <= xp2 && y_m_p < (yp+5) && y_m_p > (yp-5)) {
-		//printf("in bounding box!\n");
+	if( sketch_line_is_pt_near(s, x, y)) {
 		if(!s->base.is_highlighted) {
 			s->base.is_highlighted = 1;
 			changed = 1;
@@ -113,16 +113,16 @@ static int highlight_sketch_objects(double x, double y)
 	return something_changed;
 }
 
-static int select_sketch_object(double x, double y, int select)
+static int select_sketch_object(double x, double y)
 {
 	int i;
-	int got_one = 0;
+	int something_changed = 0;
 	for(i=0; i<app_data.sketch_count; i++) {
 		sketch_base_t *s = app_data.sketch[i];
 		switch(s->type) {
 		case SHAPE_TYPE_LINE:
 			if(select_sketch_line((sketch_line_t *)s, x, y)) {
-				got_one = 1;
+				something_changed = 1;
 			}
 			break;
 		case SHAPE_TYPE_ARC:
@@ -132,7 +132,7 @@ static int select_sketch_object(double x, double y, int select)
 			printf("Unsupported shape type!\n");
 		}
 	}
-	return got_one;
+	return something_changed;
 }
 
 gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data)
@@ -173,7 +173,9 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
 			switch(gui->state.active_tool) {
 			case TOOL_NONE:
 				// Select a sketch object
-				//select_sketch_object(event->x, event->y);
+				if( select_sketch_object(event->x, event->y) ) {
+					gtk_widget_queue_draw(gui->canvas);
+				}
 				break;
 			case TOOL_LINE:
 				// Start of a line
@@ -253,9 +255,11 @@ gboolean draw_canvas(GtkWidget *widget, GdkEventExpose *event, gpointer data)
 		sketch_base_t *obj = app_data.sketch[i];
 		switch(obj->type) {
 		case SHAPE_TYPE_LINE: {
-			if(obj->is_selected || obj->is_highlighted) {
-				draw_set_line_width(dp, 3);
+			if(obj->is_selected) {
 				draw_set_color(dp, 1,0,0);
+			}
+			if(obj->is_highlighted) {
+				draw_set_line_width(dp, 3);
 			}
 			sketch_line_t *line = (sketch_line_t *)obj;
 			draw_line(dp, 
