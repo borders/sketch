@@ -25,6 +25,9 @@ static void sketch_base_init(sketch_base_t *self, sketch_shape_type_t type)
 	self->line_width = 1.0;
 	self->line_type = LINE_TYPE_SOLID;
 	self->line_color = color_const_black;
+
+	self->children = NULL;
+	self->child_count = 0;
 }
 
 sketch_line_t *sketch_line_alloc(void)
@@ -32,6 +35,13 @@ sketch_line_t *sketch_line_alloc(void)
 	sketch_line_t *self = calloc(1, sizeof(sketch_line_t));
 	if(self == NULL) {
 		ERROR("Out of memory");
+		return NULL;
+	}
+	self->children = calloc(2, sizeof(sketch_point_t *));
+	self->child_count = 2;
+	if(self->children == NULL) {
+		ERROR("Out of memory");
+		free(self);
 		return NULL;
 	}
 	return self;
@@ -103,6 +113,10 @@ void sketch_line_init(sketch_line_t *self,
 	} else {
 		self->v2 = *v2;
 	}
+	self->is_v1_highlighted = 0;
+	self->is_v2_highlighted = 0;
+	self->is_v1_selected = 0;
+	self->is_v2_selected = 0;
 }
 
 void sketch_line_get_point_angle_len(sketch_line_t *self, 

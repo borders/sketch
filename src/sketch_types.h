@@ -31,10 +31,14 @@ typedef struct {
 	double b;
 } color_t;
 
-typedef struct _sketch_base {
+typedef struct _sketch_base sketch_base_t;
+struct _sketch_base {
 	sketch_shape_type_t type;
 
 	//constraint_list_t constraints;
+
+	sketch_base_t *children;
+	int child_count;
 
 	char is_selected;
 	char is_highlighted;
@@ -42,7 +46,7 @@ typedef struct _sketch_base {
 	double line_width;
 	line_type_t line_type;
 	color_t line_color;
-} sketch_base_t;
+};
 
 struct _coord_2D {
 	double x;
@@ -53,6 +57,11 @@ struct _sketch_line {
 	sketch_base_t base;
 	coord_2D_t v1;
 	coord_2D_t v2;
+
+	char is_v1_highlighted;
+	char is_v2_highlighted;
+	char is_v1_selected;
+	char is_v2_selected;
 };
 	
 struct _sketch_arc {
