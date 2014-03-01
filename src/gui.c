@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <math.h>
 
 #include <gtk/gtk.h>
 
@@ -34,21 +35,72 @@ static void arc_cb(GtkButton *b, gpointer data)
 	gui->state.active_tool = TOOL_ARC;
 }
 
+static 
+void point_rotate(double x, double y, double theta, double *xp, double *yp)
+{
+	double cq = cos(theta);
+	double sq = sin(theta);
+	*xp =  x * cq + y * sq;
+	*yp = -x * sq + y * cq;
+}
+
 static int select_sketch_line(sketch_line_t *s, double x, double y)
 {
+	coord_2D_t point;
+	double theta, len;
+	sketch_line_get_point_angle_len(s, &point, &theta, &len);
+	double xp1, xp2, yp;
+	point_rotate(point.x, point.y, theta, &xp1, &yp);
+	xp2 = xp1 + len;
+	
+	double x_m_p, y_m_p;
+	point_rotate(x, y, theta, &x_m_p, &y_m_p);
+
+	if(x_m_p >= xp1 && x_m_p <= xp2 && y_m_p < (yp+5) && y_m_p > (yp-5)) {
+		//printf("in bounding box!\n");
+		return 1;
+	}
 	return 0;
 }
 
-static void select_sketch_object(double x, double y)
+static int highlight_sketch_line(sketch_line_t *s, double x, double y)
+{
+	int changed = 0;
+	coord_2D_t point;
+	double theta, len;
+	sketch_line_get_point_angle_len(s, &point, &theta, &len);
+	double xp1, xp2, yp;
+	point_rotate(point.x, point.y, theta, &xp1, &yp);
+	xp2 = xp1 + len;
+	
+	double x_m_p, y_m_p;
+	point_rotate(x, y, theta, &x_m_p, &y_m_p);
+
+	if(x_m_p >= xp1 && x_m_p <= xp2 && y_m_p < (yp+5) && y_m_p > (yp-5)) {
+		//printf("in bounding box!\n");
+		if(!s->base.is_highlighted) {
+			s->base.is_highlighted = 1;
+			changed = 1;
+		}
+	} else {
+		if(s->base.is_highlighted) {
+			s->base.is_highlighted = 0;
+			changed = 1;
+		}
+	}
+	return changed;
+}
+
+static int highlight_sketch_objects(double x, double y)
 {
 	int i;
-	int quit = 0;
+	int something_changed = 0;
 	for(i=0; i<app_data.sketch_count; i++) {
 		sketch_base_t *s = app_data.sketch[i];
 		switch(s->type) {
 		case SHAPE_TYPE_LINE:
-			if(select_sketch_line((sketch_line_t *)s, x, y)) {
-				return;
+			if(highlight_sketch_line((sketch_line_t *)s, x, y)) {
+				something_changed = 1;
 			}
 			break;
 		case SHAPE_TYPE_ARC:
@@ -58,6 +110,29 @@ static void select_sketch_object(double x, double y)
 			printf("Unsupported shape type!\n");
 		}
 	}
+	return something_changed;
+}
+
+static int select_sketch_object(double x, double y, int select)
+{
+	int i;
+	int got_one = 0;
+	for(i=0; i<app_data.sketch_count; i++) {
+		sketch_base_t *s = app_data.sketch[i];
+		switch(s->type) {
+		case SHAPE_TYPE_LINE:
+			if(select_sketch_line((sketch_line_t *)s, x, y)) {
+				got_one = 1;
+			}
+			break;
+		case SHAPE_TYPE_ARC:
+			printf("Arc not yet supported as selections\n");
+			break;
+		default:
+			printf("Unsupported shape type!\n");
+		}
+	}
+	return got_one;
 }
 
 gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data)
@@ -98,7 +173,7 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
 			switch(gui->state.active_tool) {
 			case TOOL_NONE:
 				// Select a sketch object
-				select_sketch_object(event->x, event->y);
+				//select_sketch_object(event->x, event->y);
 				break;
 			case TOOL_LINE:
 				// Start of a line
@@ -132,6 +207,11 @@ gboolean mouse_motion_cb(GtkWidget *widget, GdkEventMotion *event, gpointer data
 		gui->state.end_x = event->x;
 		gui->state.end_y = event->y;
 		gtk_widget_queue_draw(gui->canvas);
+	} else if(gui->state.active_tool == TOOL_NONE) {
+		if(highlight_sketch_objects(event->x, event->y)) {
+			printf("redrawing due to highlight state change\n");
+			gtk_widget_queue_draw(gui->canvas);
+		}
 	}
 
 	return TRUE;
@@ -166,13 +246,17 @@ gboolean draw_canvas(GtkWidget *widget, GdkEventExpose *event, gpointer data)
 	}
 
 	// draw sketch objects
-	draw_set_line_width(dp, 2);
-   draw_set_color(dp, 0,0,1);
 	for(i = 0; i < app_data.sketch_count; i++) {
+		draw_set_line_width(dp, 2);
+		draw_set_color(dp, 0,0,1);
 		//printf("drawing sketch object %d of %d...\n", i+1, app_data.sketch_count);
 		sketch_base_t *obj = app_data.sketch[i];
 		switch(obj->type) {
 		case SHAPE_TYPE_LINE: {
+			if(obj->is_selected || obj->is_highlighted) {
+				draw_set_line_width(dp, 3);
+				draw_set_color(dp, 1,0,0);
+			}
 			sketch_line_t *line = (sketch_line_t *)obj;
 			draw_line(dp, 
 			          line->v1.x, line->v1.y, 

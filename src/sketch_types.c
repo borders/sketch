@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 #include "sketch_types.h"
 #include "utils.h"
 
@@ -19,6 +20,7 @@ static void sketch_base_init(sketch_base_t *self, sketch_shape_type_t type)
 	//self->constraints.tail = NULL;
 
 	self->is_selected = 0;
+	self->is_highlighted = 0;
 
 	self->line_width = 1.0;
 	self->line_type = LINE_TYPE_SOLID;
@@ -100,6 +102,38 @@ void sketch_line_init(sketch_line_t *self,
 		self->v2.y = 0.0;
 	} else {
 		self->v2 = *v2;
+	}
+}
+
+void sketch_line_get_point_angle_len(sketch_line_t *self, 
+                         coord_2D_t *point, double *theta, double *length)
+{
+	double dx = self->v2.x - self->v1.x;
+	double dy = self->v2.y - self->v1.y;
+	point->x = self->v1.x;
+	point->y = self->v1.y;
+	if(dx == 0.0) {
+		if(dy == 0.0) {
+			*length = 0.0;
+			*theta = 0.0;
+		} else if(dy > 0.0) {
+			*length = dy;
+			*theta = M_PI / 2.0;
+		} else { // dy < 0.0
+			*length = -dy;
+			*theta = -M_PI / 2.0;
+		}
+	} else if(dy == 0.0) {
+		if(dx > 0.0) {
+			*length = dx;
+			*theta = 0.0;
+		} else { // dx < 0.0
+			*length = -dx;
+			*theta = M_PI;
+		}
+	} else {
+		*theta = atan2(dy, dx);
+		*length = sqrt(dx*dx + dy*dy);
 	}
 }
 

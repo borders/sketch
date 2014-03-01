@@ -37,6 +37,7 @@ typedef struct _sketch_base {
 	//constraint_list_t constraints;
 
 	char is_selected;
+	char is_highlighted;
 
 	double line_width;
 	line_type_t line_type;
@@ -83,6 +84,9 @@ void sketch_line_init(sketch_line_t *self,
                       coord_2D_t const *v1, coord_2D_t const *v2);
 void sketch_circle_init(sketch_circle_t *self, 
                         coord_2D_t const *center, double radius);
+
+void sketch_line_get_point_angle_len(sketch_line_t *self, 
+                         coord_2D_t *point, double *theta, double *length);
 
 int sketch_line_fini(sketch_line_t *self);
 int sketch_arc_fini(sketch_arc_t *self);
