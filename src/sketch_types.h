@@ -53,19 +53,23 @@ struct _coord_2D {
 	double y;
 };
 
+struct _sketch_point {
+	sketch_base_t base;
+
+	double x;
+	double y;
+};
+
 struct _sketch_line {
 	sketch_base_t base;
-	coord_2D_t v1;
-	coord_2D_t v2;
 
-	char is_v1_highlighted;
-	char is_v2_highlighted;
-	char is_v1_selected;
-	char is_v2_selected;
+	sketch_point_t *v1;
+	sketch_point_t *v2;
 };
 	
 struct _sketch_arc {
 	sketch_base_t base;
+
 	coord_2D_t v1;
 	coord_2D_t v2;
 	coord_2D_t center;
