@@ -272,6 +272,8 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
 
 gboolean key_press_cb(GtkWidget *widget, GdkEventKey *event, gpointer data)
 {
+	gui_t *gui = (gui_t *)data;
+	/*
 	printf("got key press: %c (%d)\n", event->keyval, event->state);
 	if(event->state & GDK_SHIFT_MASK)
 		printf(" shift\n");
@@ -279,6 +281,40 @@ gboolean key_press_cb(GtkWidget *widget, GdkEventKey *event, gpointer data)
 		printf(" control\n");
 	if(event->state & GDK_META_MASK)
 		printf(" meta\n");
+	*/
+
+	if(event->keyval == 'z') { // zoom in
+		double alpha = 0.75;
+		gint x_s_px, y_s_px;
+		gtk_widget_get_pointer(gui->canvas, &x_s_px, &y_s_px);
+		double x_s, y_s;
+		x_s = px_to_user_x(gui, x_s_px);
+		y_s = px_to_user_y(gui, y_s_px);
+		double dx = gui->xmax - gui->xmin;
+		double dy = gui->ymax - gui->ymin;
+		gui->xmin = x_s - alpha/2.0 * dx;
+		gui->xmax = x_s + alpha/2.0 * dx;
+		gui->ymin = y_s - alpha/2.0 * dy;
+		gui->ymax = y_s + alpha/2.0 * dy;
+		gtk_widget_queue_draw(gui->canvas);
+
+	} else if(event->keyval == 'Z') { // zoom out
+		double alpha = 4.0/3.0;
+		gint x_s_px, y_s_px;
+		gtk_widget_get_pointer(gui->canvas, &x_s_px, &y_s_px);
+		double x_s, y_s;
+		x_s = px_to_user_x(gui, x_s_px);
+		y_s = px_to_user_y(gui, y_s_px);
+		double dx = gui->xmax - gui->xmin;
+		double dy = gui->ymax - gui->ymin;
+		gui->xmin = x_s - alpha/2.0 * dx;
+		gui->xmax = x_s + alpha/2.0 * dx;
+		gui->ymin = y_s - alpha/2.0 * dy;
+		gui->ymax = y_s + alpha/2.0 * dy;
+		gtk_widget_queue_draw(gui->canvas);
+
+	}
+
 	return TRUE;
 }
 
@@ -299,7 +335,7 @@ gboolean mouse_motion_cb(GtkWidget *widget, GdkEventMotion *event, gpointer data
 		     ) 
 		  )  
 		{
-			printf("redrawing due to highlight state change\n");
+			//printf("redrawing due to highlight state change\n");
 			gtk_widget_queue_draw(gui->canvas);
 		}
 	}
