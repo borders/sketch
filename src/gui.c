@@ -10,6 +10,47 @@
 #include "main.h"
 #include "sketch_types.h"
 
+void gui_update_draw_scale(gui_t *self, 
+                        double xmin, double xmax, 
+                        double ymin, double ymax,
+                        double w, double h)
+{
+	self->x_m = w / (xmax - xmin);
+	self->y_m = h / (ymin - ymax);
+	if(fabs(self->x_m) < fabs(self->y_m)) {
+		self->y_m = -self->x_m;
+		self->x_b = -self->x_m * xmin;
+		self->y_b = h/2.0 - self->y_m * (ymin+ymax)/2.0;
+	} else {
+		self->x_m = -self->y_m;
+		self->y_b = -self->y_m * ymax;
+		self->x_b = w/2.0 - self->x_m * (xmin+xmax)/2.0;
+	}
+}
+
+static inline
+double px_to_user_x(gui_t *self, double x)
+{
+	return (x - self->x_b) / self->x_m;
+}
+
+static inline
+double px_to_user_y(gui_t *self, double y)
+{
+	return (y - self->y_b) / self->y_m;
+}
+
+static inline
+double user_to_px_x(gui_t *self, double x)
+{
+	return self->x_m * x + self->x_b;
+}
+
+static inline
+double user_to_px_y(gui_t *self, double y)
+{
+	return self->y_m * y + self->y_b;
+}
 
 static void select_cb(GtkButton *b, gpointer data)
 {
@@ -231,6 +272,151 @@ gboolean mouse_motion_cb(GtkWidget *widget, GdkEventMotion *event, gpointer data
 	return TRUE;
 }
 
+/*************************************************/
+
+static double round_up_to_nearest(double num, double nearest) {
+  double a = num / nearest;
+  return (ceil(a) * nearest);
+}
+
+static double round_down_to_nearest(double num, double nearest) {
+  double a = num / nearest;
+  return (floor(a) * nearest);
+}
+
+static void get_double_parts(double f, double *mantissa, int *exponent) {
+  int neg = 0;
+  if(f == 0.0) {  
+    *mantissa = 0.0;
+    *exponent = 0;
+    return;
+  }
+  if(f < 0) neg = 1;
+  *exponent = floor(log10(fabs(f)));
+  *mantissa = f / pow(10, *exponent);
+  return;
+}
+
+static int set_linear_tic_values(axis_t *a, double min, double max) {
+	double raw_range = max - min;
+	double raw_tic_delta = raw_range / (NUM_REQ_TICS - 1);
+	double mantissa;
+	int exponent;
+	get_double_parts(raw_tic_delta, &mantissa, &exponent);
+	double actual_tic_delta;
+
+	if(mantissa <= 1.0) {
+		actual_tic_delta = 1.0 * pow(10., exponent);
+	}
+	else if(mantissa <= 2.0) {
+		actual_tic_delta = 2.0 * pow(10., exponent);
+	}
+	else if(mantissa <= 2.5) {
+		actual_tic_delta = 2.5 * pow(10., exponent);
+	}
+	else if(mantissa <= 5.0) {
+		actual_tic_delta = 5.0 * pow(10., exponent);
+	}
+	else {
+		actual_tic_delta = 1.0 * pow(10., exponent+1);
+	}
+
+	double min_tic_val;
+	min_tic_val = round_up_to_nearest(min, actual_tic_delta);
+		
+	double tic_val;
+	int i = 0;
+	for(tic_val = min_tic_val; tic_val < max && i < MAX_NUM_MAJOR_TICS; tic_val += actual_tic_delta) {
+		/* perform check to see if it should be equal to zero */
+		if(fabs(tic_val / actual_tic_delta) < 0.5) {
+			tic_val = 0.0;
+		}
+		a->major_tic_values[i] = tic_val;
+		i++;
+	}
+	if(i >= MAX_NUM_MAJOR_TICS) {
+		printf("Too many major tics!!!\n");
+		return -1;
+	}
+	
+	a->num_actual_major_tics = i;		
+	a->major_tic_delta = actual_tic_delta;
+
+	return 0;
+}
+
+
+static int set_major_tic_labels(axis_t *a) {
+	int i, ret;
+	int err = 0;
+	double dd = log10( fabs(a->major_tic_delta) );
+	double d1 = log10(fabs(a->major_tic_values[0]));
+	double d2 = log10(fabs(a->major_tic_values[a->num_actual_major_tics-1]));
+	double d = (d2>d1) ? d2 : d1;
+	int sigs = ceil(d) - floor(dd) + 1.5;
+	if(sigs < 4) 
+		sigs = 4;
+	sprintf(a->tic_label_format_string, "%%.%dg", sigs);
+	for(i=0; i<a->num_actual_major_tics; i++) { 
+		ret = snprintf(a->major_tic_labels[i], MAJOR_TIC_LABEL_SIZE, a->tic_label_format_string, a->major_tic_values[i]);
+	}
+	return err;
+}
+
+
+/*************************************************/
+
+
+static void draw_ruler(gui_t *self)
+{
+	int i;
+   draw_ptr dp = self->drawer;
+
+	axis_t *ax = &(self->x_axis);
+	axis_t *ay = &(self->y_axis);
+
+	set_linear_tic_values(ax, self->xmin, self->xmax);
+	set_linear_tic_values(ay, self->ymin, self->ymax);
+	set_major_tic_labels(ax);
+	set_major_tic_labels(ay);
+
+	float width, height;
+   draw_get_canvas_dims(dp, &width, &height);
+	
+	// draw some gridlines for now...
+	draw_set_line_width(dp, 1);
+	draw_set_color(dp, 0.8, 0.8, 0.8);
+	for(i=0; i < ax->num_actual_major_tics; i++) {
+		double val = ax->major_tic_values[i];
+		double x_px = user_to_px_x(self, val);
+		draw_line(dp, x_px, 0, x_px, height);
+	}
+	for(i=0; i < ay->num_actual_major_tics; i++) {
+		double val = ay->major_tic_values[i];
+		double y_px = user_to_px_y(self, val);
+		draw_line(dp, 0, y_px, width, y_px);
+	}
+
+	// draw the top (horizontal) ruler bar
+	draw_set_color(dp, 0, 0, 0);
+	for(i=0; i < ax->num_actual_major_tics; i++) {
+		double val = ax->major_tic_values[i];
+		double x_px = user_to_px_x(self, val);
+		draw_text(dp, ax->major_tic_labels[i], 8, 
+		          x_px, 5, ANCHOR_TOP_MIDDLE);
+	}
+
+	// draw the left (vertical) ruler bar
+	draw_set_color(dp, 0, 0, 0);
+	for(i=0; i < ay->num_actual_major_tics; i++) {
+		double val = ay->major_tic_values[i];
+		double y_px = user_to_px_y(self, val);
+		draw_text(dp, ay->major_tic_labels[i], 8, 
+		          5, y_px, ANCHOR_MIDDLE_LEFT);
+	}
+
+}
+
 gboolean draw_canvas(GtkWidget *widget, GdkEventExpose *event, gpointer data) 
 {
 	gui_t *gui = (gui_t *)data;
@@ -244,9 +430,25 @@ gboolean draw_canvas(GtkWidget *widget, GdkEventExpose *event, gpointer data)
    float width, height;
    draw_get_canvas_dims(dp, &width, &height);
 
+
+	/* Set the scaling conversion coefficients.
+	 * This really should only need to be done when:
+	 *   - the view is changed (pan or zoom)
+	 *   - the window is resized (configure event)
+	 */
+	gui_update_draw_scale(
+		gui, 
+		gui->xmin, gui->xmax, gui->ymin, gui->ymax,
+		width, height
+	);
+
+
    // first, fill with background color
    draw_set_color(dp, 1,1,1);
    draw_rectangle_filled(dp, 0, 0, width, height);
+
+	// draw the ruler
+	draw_ruler(gui);
 
 	// draw the active line/arc, if there is one
 	if(gui->state.draw_active) {
@@ -367,6 +569,12 @@ int gui_init(gui_t *self, int *argc, char ***argv)
 	/* Finalize the GUI setup */
 	g_signal_connect(self->window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
    gtk_widget_show_all(self->window);
+
+	// for now, just set user coords equal to pixel coords
+	self->xmin = -10;
+	self->xmax = +10;
+	self->ymin = -10;
+	self->ymax = +10;
 
 	return 0;
 }
