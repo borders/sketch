@@ -8,7 +8,7 @@
 
 #define FDF 0
 
-#define MAX_ITERATIONS 200
+#define MAX_ITERATIONS 2000
 #define STOP_THRESH 1.0e-10
 
 struct _parm_map {
