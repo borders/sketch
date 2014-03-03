@@ -200,6 +200,18 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
 	return TRUE;
 }
 
+gboolean key_press_cb(GtkWidget *widget, GdkEventKey *event, gpointer data)
+{
+	printf("got key press: %c (%d)\n", event->keyval, event->state);
+	if(event->state & GDK_SHIFT_MASK)
+		printf(" shift\n");
+	if(event->state & GDK_CONTROL_MASK)
+		printf(" control\n");
+	if(event->state & GDK_META_MASK)
+		printf(" meta\n");
+	return TRUE;
+}
+
 gboolean mouse_motion_cb(GtkWidget *widget, GdkEventMotion *event, gpointer data)
 {
 	gui_t *gui = (gui_t *)data;
@@ -225,6 +237,9 @@ gboolean draw_canvas(GtkWidget *widget, GdkEventExpose *event, gpointer data)
    draw_ptr dp = gui->drawer;
    draw_start(dp);
    int i;
+
+	// grab keyboard focus
+	gtk_widget_grab_focus(gui->canvas);
 
    float width, height;
    draw_get_canvas_dims(dp, &width, &height);
@@ -327,12 +342,15 @@ int gui_init(gui_t *self, int *argc, char ***argv)
 	                                     GDK_POINTER_MOTION_MASK
 	                                    )
 	                      );
+	gtk_widget_set_can_focus(self->canvas, TRUE);
    g_signal_connect(self->canvas, "button_press_event", 
 	                 G_CALLBACK(mouse_button_cb), self);
    g_signal_connect(self->canvas, "button_release_event", 
 	                 G_CALLBACK(mouse_button_cb), self);
    g_signal_connect(self->canvas, "motion_notify_event", 
 	                 G_CALLBACK(mouse_motion_cb), self);
+   g_signal_connect(self->canvas, "key_press_event", 
+	                 G_CALLBACK(key_press_cb), self);
 
 	/* drawing "context" */
 	self->drawer = draw_create(self->canvas);
