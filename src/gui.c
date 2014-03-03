@@ -182,6 +182,18 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
 	switch(event->type) {
 	case GDK_BUTTON_PRESS:
 
+		// check for start of pan
+		if(event->button == 3) {
+			printf("starting pan\n");
+			gui->panning = 1;
+			gui->pan_start_x = event->x;
+			gui->pan_start_y = event->y;
+			gui->pan_start_xmin = gui->xmin;
+			gui->pan_start_xmax = gui->xmax;
+			gui->pan_start_ymin = gui->ymin;
+			gui->pan_start_ymax = gui->ymax;
+		}
+
 		if(gui->state.draw_active) {
 			switch(gui->state.active_tool) {
 			case TOOL_NONE:
@@ -231,7 +243,13 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
 
 		break;
 	case GDK_BUTTON_RELEASE:
-		//printf("  button released\n");
+		if(event->button == 3) {
+			if(gui->panning) {
+				printf("stop pan\n");
+				gui->panning = 0;
+				gtk_widget_queue_draw(gui->canvas);
+			}
+		}
 		break;
 	default:
 		//printf("Unexpected event type!\n");
@@ -267,6 +285,15 @@ gboolean mouse_motion_cb(GtkWidget *widget, GdkEventMotion *event, gpointer data
 			printf("redrawing due to highlight state change\n");
 			gtk_widget_queue_draw(gui->canvas);
 		}
+	}
+
+
+	if(gui->panning) {
+		gui->xmin = gui->pan_start_xmin - (event->x - gui->pan_start_x) / gui->x_m;
+		gui->xmax = gui->pan_start_xmax - (event->x - gui->pan_start_x) / gui->x_m;
+		gui->ymin = gui->pan_start_ymin - (event->y - gui->pan_start_y) / gui->y_m;
+		gui->ymax = gui->pan_start_ymax - (event->y - gui->pan_start_y) / gui->y_m;
+		gtk_widget_queue_draw(gui->canvas);
 	}
 
 	return TRUE;
@@ -575,6 +602,8 @@ int gui_init(gui_t *self, int *argc, char ***argv)
 	self->xmax = +10;
 	self->ymin = -10;
 	self->ymax = +10;
+
+	self->panning = 0;
 
 	return 0;
 }

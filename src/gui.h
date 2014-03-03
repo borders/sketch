@@ -72,6 +72,14 @@ struct _gui {
 
 	axis_t x_axis;
 	axis_t y_axis;
+
+	char panning;
+	double pan_start_x;
+	double pan_start_y;
+	double pan_start_xmin;
+	double pan_start_xmax;
+	double pan_start_ymin;
+	double pan_start_ymax;
 };
 
 typedef struct _gui gui_t;
