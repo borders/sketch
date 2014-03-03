@@ -85,7 +85,7 @@ void point_rotate(double x, double y, double theta, double *xp, double *yp)
 	*yp = -x * sq + y * cq;
 }
 
-static int sketch_line_is_pt_near(sketch_line_t *s, double x, double y)
+static int sketch_line_is_pt_near(sketch_line_t *s, double x, double y, double tol)
 {
 	coord_2D_t point;
 	double theta, len;
@@ -97,28 +97,28 @@ static int sketch_line_is_pt_near(sketch_line_t *s, double x, double y)
 	double x_m_p, y_m_p;
 	point_rotate(x, y, theta, &x_m_p, &y_m_p);
 
-	if(x_m_p >= xp1 && x_m_p <= xp2 && y_m_p < (yp+5) && y_m_p > (yp-5)) {
+	if(x_m_p >= xp1 && x_m_p <= xp2 && y_m_p < (yp+tol) && y_m_p > (yp-tol)) {
 		return 1;
 	}
 	return 0;
 }
 
-static int select_sketch_line(sketch_line_t *s, double x, double y)
+static int select_sketch_line(sketch_line_t *s, double x, double y, double tol)
 {
 	int changed = 0;
 
-	if( sketch_line_is_pt_near(s, x, y)) {
+	if( sketch_line_is_pt_near(s, x, y, tol)) {
 		changed = 1;
 		s->base.is_selected = !s->base.is_selected;
 	}
 	return changed;
 }
 
-static int highlight_sketch_line(sketch_line_t *s, double x, double y)
+static int highlight_sketch_line(sketch_line_t *s, double x, double y, double tol)
 {
 	int changed = 0;
 
-	if( sketch_line_is_pt_near(s, x, y)) {
+	if( sketch_line_is_pt_near(s, x, y, tol)) {
 		if(!s->base.is_highlighted) {
 			s->base.is_highlighted = 1;
 			changed = 1;
@@ -132,7 +132,7 @@ static int highlight_sketch_line(sketch_line_t *s, double x, double y)
 	return changed;
 }
 
-static int highlight_sketch_objects(double x, double y)
+static int highlight_sketch_objects(double x, double y, double tol)
 {
 	int i;
 	int something_changed = 0;
@@ -140,7 +140,7 @@ static int highlight_sketch_objects(double x, double y)
 		sketch_base_t *s = app_data.sketch[i];
 		switch(s->type) {
 		case SHAPE_TYPE_LINE:
-			if(highlight_sketch_line((sketch_line_t *)s, x, y)) {
+			if(highlight_sketch_line((sketch_line_t *)s, x, y, tol)) {
 				something_changed = 1;
 			}
 			break;
@@ -154,7 +154,7 @@ static int highlight_sketch_objects(double x, double y)
 	return something_changed;
 }
 
-static int select_sketch_object(double x, double y)
+static int select_sketch_object(double x, double y, double tol)
 {
 	int i;
 	int something_changed = 0;
@@ -162,7 +162,7 @@ static int select_sketch_object(double x, double y)
 		sketch_base_t *s = app_data.sketch[i];
 		switch(s->type) {
 		case SHAPE_TYPE_LINE:
-			if(select_sketch_line((sketch_line_t *)s, x, y)) {
+			if(select_sketch_line((sketch_line_t *)s, x, y, tol)) {
 				something_changed = 1;
 			}
 			break;
@@ -200,20 +200,26 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
 				printf("Shouldn't be here!\n");
 				break;
 			case TOOL_LINE: {
-				double end_x, end_y;
-				end_x = event->x;
-				end_y = event->y;
-				printf("  start: (%g,%g)  end: (%g,%g)\n",
+				double end_xp, end_yp;
+				end_xp = event->x;
+				end_yp = event->y;
+				double end_xu, end_yu;
+				end_xu = px_to_user_x(gui, end_xp);
+				end_yu = px_to_user_y(gui, end_yp);
+				printf("  px::   start: (%g,%g)  end: (%g,%g)\n",
 				       gui->state.start_x, gui->state.start_y,
-				       end_x, end_y);
+				       end_xp, end_yp);
+				printf("  user:: start: (%g,%g)  end: (%g,%g)\n",
+				       gui->state.start_x, gui->state.start_y,
+				       end_xu, end_yu);
 
 				sketch_line_t *line = sketch_line_alloc();
 				app_data.sketch[app_data.sketch_count++] = (sketch_base_t *)line;
 				coord_2D_t start, end;
 				start.x = gui->state.start_x;
 				start.y = gui->state.start_y;
-				end.x = end_x;
-				end.y = end_y;
+				end.x = end_xu;
+				end.y = end_yu;
 				sketch_line_init(line, &start, &end);
 				gui->state.draw_active = false;
 				gtk_widget_queue_draw(gui->canvas);
@@ -226,15 +232,20 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
 			switch(gui->state.active_tool) {
 			case TOOL_NONE:
 				// Select a sketch object
-				if( select_sketch_object(event->x, event->y) ) {
+				if( select_sketch_object(
+				    	px_to_user_x(gui, event->x), 
+				    	px_to_user_y(gui, event->y),
+				    	5.0 / fabs(gui->x_m)
+				    ) 
+				   ) {
 					gtk_widget_queue_draw(gui->canvas);
 				}
 				break;
 			case TOOL_LINE:
 				// Start of a line
 				gui->state.draw_active = true;
-				gui->state.start_x = event->x;
-				gui->state.start_y = event->y;
+				gui->state.start_x = px_to_user_x(gui, event->x);
+				gui->state.start_y = px_to_user_y(gui, event->y);
 				break;
 			default:	
 				printf("Unsupported tool!\n");
@@ -281,7 +292,13 @@ gboolean mouse_motion_cb(GtkWidget *widget, GdkEventMotion *event, gpointer data
 		gui->state.end_y = event->y;
 		gtk_widget_queue_draw(gui->canvas);
 	} else if(gui->state.active_tool == TOOL_NONE) {
-		if(highlight_sketch_objects(event->x, event->y)) {
+		if(  highlight_sketch_objects(
+			           px_to_user_x(gui, event->x), 
+			 	        px_to_user_y(gui, event->y), 
+		              5.0/fabs(gui->x_m) 
+		     ) 
+		  )  
+		{
 			printf("redrawing due to highlight state change\n");
 			gtk_widget_queue_draw(gui->canvas);
 		}
@@ -484,8 +501,9 @@ gboolean draw_canvas(GtkWidget *widget, GdkEventExpose *event, gpointer data)
 		switch(gui->state.active_tool) {
 		case TOOL_LINE:
 			draw_line(dp, 
-			          gui->state.start_x, gui->state.start_y, 
-			          gui->state.end_x, gui->state.end_y
+				user_to_px_x(gui, gui->state.start_x), 
+				user_to_px_y(gui, gui->state.start_y), 
+				gui->state.end_x, gui->state.end_y
 			);
 			break;
 		}
@@ -507,8 +525,8 @@ gboolean draw_canvas(GtkWidget *widget, GdkEventExpose *event, gpointer data)
 			}
 			sketch_line_t *line = (sketch_line_t *)obj;
 			draw_line(dp, 
-			          line->v1.x, line->v1.y, 
-			          line->v2.x, line->v2.y
+			          user_to_px_x(gui, line->v1.x), user_to_px_y(gui, line->v1.y),
+			          user_to_px_x(gui, line->v2.x), user_to_px_y(gui, line->v2.y)
 			);
 			break;
 		}
