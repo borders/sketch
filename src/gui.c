@@ -429,7 +429,7 @@ static void draw_ruler(gui_t *self)
 	
 	// draw some gridlines for now...
 	draw_set_line_width(dp, 1);
-	draw_set_color(dp, 0.8, 0.8, 0.8);
+	draw_set_color(dp, 0.9, 0.9, 0.9);
 	for(i=0; i < ax->num_actual_major_tics; i++) {
 		double val = ax->major_tic_values[i];
 		double x_px = user_to_px_x(self, val);
@@ -448,6 +448,7 @@ static void draw_ruler(gui_t *self)
 		double x_px = user_to_px_x(self, val);
 		draw_text(dp, ax->major_tic_labels[i], 8, 
 		          x_px, 5, ANCHOR_TOP_MIDDLE);
+		draw_line(dp, x_px, 15, x_px, 25);
 	}
 
 	// draw the left (vertical) ruler bar
@@ -455,8 +456,10 @@ static void draw_ruler(gui_t *self)
 	for(i=0; i < ay->num_actual_major_tics; i++) {
 		double val = ay->major_tic_values[i];
 		double y_px = user_to_px_y(self, val);
-		draw_text(dp, ay->major_tic_labels[i], 8, 
-		          5, y_px, ANCHOR_MIDDLE_LEFT);
+		char *s = ay->major_tic_labels[i];
+		double w = draw_get_text_width(dp, s, 8);
+		draw_text(dp, s, 8, 5, y_px, ANCHOR_MIDDLE_LEFT);
+		draw_line(dp, 5+w+5, y_px, 30, y_px);
 	}
 
 }
