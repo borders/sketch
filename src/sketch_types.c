@@ -33,17 +33,19 @@ static void sketch_base_init(sketch_base_t *self, sketch_shape_type_t type)
 sketch_line_t *sketch_line_alloc(void)
 {
 	sketch_line_t *self = calloc(1, sizeof(sketch_line_t));
-	if(self == NULL) {
-		ERROR("Out of memory");
-		return NULL;
-	}
-	self->children = calloc(2, sizeof(sketch_point_t *));
+	assert(self);
+
+	self->v1 = sketch_point_alloc();
+	self->v2 = sketch_point_alloc();
+	assert(self->v1 && self->v2);
+
+	self->children = calloc(2, sizeof(sketch_base_t *));
 	self->child_count = 2;
-	if(self->children == NULL) {
-		ERROR("Out of memory");
-		free(self);
-		return NULL;
-	}
+	assert(self->children);
+
+	self->children[0] = self->v1;
+	self->children[1] = self->v2;
+
 	return self;
 }
 

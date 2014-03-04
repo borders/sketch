@@ -3,6 +3,7 @@
 
 /* some forward declarations */
 typedef struct _coord_2D      coord_2D_t;
+typedef struct _sketch_point  sketch_point_t;
 typedef struct _sketch_line   sketch_line_t;
 typedef struct _sketch_arc    sketch_arc_t;
 typedef struct _sketch_circle sketch_circle_t;
@@ -10,9 +11,11 @@ typedef struct _sketch_circle sketch_circle_t;
 #include "constraint.h"
 
 typedef enum {
-	SHAPE_TYPE_LINE = 0,
+	SHAPE_TYPE_POINT = 0,
+	SHAPE_TYPE_LINE,
 	SHAPE_TYPE_ARC,
 	SHAPE_TYPE_CIRCLE,
+	SHAPE_TYPE_GROUP,
 
 	NUM_SHAPE_TYPES
 } sketch_shape_type_t;
@@ -37,7 +40,7 @@ struct _sketch_base {
 
 	//constraint_list_t constraints;
 
-	sketch_base_t *children;
+	sketch_base_t **children;
 	int child_count;
 
 	char is_selected;
