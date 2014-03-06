@@ -30,6 +30,22 @@ static void sketch_base_init(sketch_base_t *self, sketch_shape_type_t type)
 	self->child_count = 0;
 }
 
+sketch_point_t *sketch_point_alloc(void)
+{
+	sketch_point_t *self = calloc(1, sizeof(sketch_point_t));
+	assert(self);
+
+	return self;
+}
+
+int sketch_point_init(sketch_point_t *self, double x, double y)
+{
+	sketch_base_init( (sketch_base_t *)self, SHAPE_TYPE_POINT);
+	self->x = x;
+	self->y = y;
+	return 0;
+}
+
 sketch_line_t *sketch_line_alloc(void)
 {
 	sketch_line_t *self = calloc(1, sizeof(sketch_line_t));
@@ -38,13 +54,6 @@ sketch_line_t *sketch_line_alloc(void)
 	self->v1 = sketch_point_alloc();
 	self->v2 = sketch_point_alloc();
 	assert(self->v1 && self->v2);
-
-	self->children = calloc(2, sizeof(sketch_base_t *));
-	self->child_count = 2;
-	assert(self->children);
-
-	self->children[0] = self->v1;
-	self->children[1] = self->v2;
 
 	return self;
 }
@@ -104,30 +113,35 @@ void sketch_line_init(sketch_line_t *self,
 {
 	sketch_base_init( (sketch_base_t *)self, SHAPE_TYPE_LINE);
 	if (v1 == NULL) {
-		self->v1.x = 0.0;
-		self->v1.y = 0.0;
+		self->v1->x = 0.0;
+		self->v1->y = 0.0;
 	} else {
-		self->v1 = *v1;
+		self->v1->x = v1->x;
+		self->v1->y = v1->y;
 	}
 	if (v2 == NULL) {
-		self->v2.x = 0.0;
-		self->v2.y = 0.0;
+		self->v2->x = 0.0;
+		self->v2->y = 0.0;
 	} else {
-		self->v2 = *v2;
+		self->v2->x = v2->x;
+		self->v2->y = v2->y;
 	}
-	self->is_v1_highlighted = 0;
-	self->is_v2_highlighted = 0;
-	self->is_v1_selected = 0;
-	self->is_v2_selected = 0;
+
+	self->base.children = calloc(2, sizeof(sketch_base_t *));
+	assert(self->base.children);
+
+	self->base.children[0] = (sketch_base_t *)self->v1;
+	self->base.children[1] = (sketch_base_t *)self->v2;
+	self->base.child_count = 2;
 }
 
 void sketch_line_get_point_angle_len(sketch_line_t *self, 
                          coord_2D_t *point, double *theta, double *length)
 {
-	double dx = self->v2.x - self->v1.x;
-	double dy = self->v2.y - self->v1.y;
-	point->x = self->v1.x;
-	point->y = self->v1.y;
+	double dx = self->v2->x - self->v1->x;
+	double dy = self->v2->y - self->v1->y;
+	point->x = self->v1->x;
+	point->y = self->v1->y;
 	if(dx == 0.0) {
 		if(dy == 0.0) {
 			*length = 0.0;

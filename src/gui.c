@@ -564,8 +564,8 @@ gboolean draw_canvas(GtkWidget *widget, GdkEventExpose *event, gpointer data)
 			}
 			sketch_line_t *line = (sketch_line_t *)obj;
 			draw_line(dp, 
-			          user_to_px_x(gui, line->v1.x), user_to_px_y(gui, line->v1.y),
-			          user_to_px_x(gui, line->v2.x), user_to_px_y(gui, line->v2.y)
+			          user_to_px_x(gui, line->v1->x), user_to_px_y(gui, line->v1->y),
+			          user_to_px_x(gui, line->v2->x), user_to_px_y(gui, line->v2->y)
 			);
 			break;
 		}

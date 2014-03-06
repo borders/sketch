@@ -32,8 +32,8 @@ static double cost_line_length(constraint_t *self)
 	/*
 		arg1 = sqrt( (x2-x1)^2 + (y2-y1)^2 )
 	*/
-	double dx = self->line1->v2.x - self->line1->v1.x;
-	double dy = self->line1->v2.y - self->line1->v1.y;
+	double dx = self->line1->v2->x - self->line1->v1->x;
+	double dy = self->line1->v2->y - self->line1->v1->y;
 	double L = sqrt(dx * dx + dy * dy);
 	double err = self->arg1 - L;
 	return (err*err);
@@ -44,7 +44,7 @@ static double cost_line_horiz(constraint_t *self)
 	/*
 		y1 = y2
 	*/
-	double err = self->line1->v2.y - self->line1->v1.y;
+	double err = self->line1->v2->y - self->line1->v1->y;
 	return (err*err);
 }
 
@@ -53,7 +53,7 @@ static double cost_line_vert(constraint_t *self)
 	/*
 		x1 = x2
 	*/
-	double err = self->line1->v2.x - self->line1->v1.x;
+	double err = self->line1->v2->x - self->line1->v1->x;
 	return (err*err);
 }
 

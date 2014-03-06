@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "solver.h"
 #include "utils.h"
@@ -107,6 +108,8 @@ int solver_init(solver_t *self, constraint_t *c[], int c_count)
 {
 	int i;
 
+	printf("here _1\n");
+
 	// store references to constraints
 	self->c = c;
 	self->c_count = c_count;
@@ -114,6 +117,7 @@ int solver_init(solver_t *self, constraint_t *c[], int c_count)
 	// initialize the parm_map, which will determine the size of the solver
 	parm_map_init(self->map, (const constraint_t **)c, c_count);
 
+	printf("here _2\n");
 	self->size = self->map->size;
 
 #if FDF
@@ -123,6 +127,8 @@ int solver_init(solver_t *self, constraint_t *c[], int c_count)
 	self->s = gsl_multimin_fminimizer_alloc(
 	             gsl_multimin_fminimizer_nmsimplex2, self->size);
 #endif
+	assert(self->s);
+
 	self->x = gsl_vector_alloc(self->size);
 	self->x_0 = gsl_vector_alloc(self->size);
 
@@ -145,15 +151,22 @@ int solver_init(solver_t *self, constraint_t *c[], int c_count)
 	self->func.fdf = fdf_eval;
 #endif
 
+	printf("here _3\n");
 
 #if FDF
 	gsl_multimin_fdfminimizer_set(self->s, &(self->func), self->x, 0.01, 1e-4);
 #else
+	printf("here _4\n");
 	gsl_vector *step = gsl_vector_alloc(self->size);
+	assert(step);
+
+	printf("here _5\n");
 	for(i=0; i < self->size; i++) {
 		gsl_vector_set(step, i, 0.01);
 	}
+	printf("here _6\n");
 	gsl_multimin_fminimizer_set(self->s, &(self->func), self->x, step);
+	printf("here _7\n");
 	gsl_vector_free(step);
 #endif
 
@@ -227,26 +240,26 @@ void parm_map_print(parm_map_t *self, FILE *fp, constraint_t *c[], int c_count)
 		if(c != NULL) {
 			int j;
 			for(j=0; j < c_count; j++) {
-				if(self->values[i] == &(c[j]->line1->v1.x) ||
-						self->values[i] == &(c[j]->line1->v1.y) ||
-						self->values[i] == &(c[j]->line1->v2.x) ||
-						self->values[i] == &(c[j]->line1->v2.y) ||
+				if(self->values[i] == &(c[j]->line1->v1->x) ||
+						self->values[i] == &(c[j]->line1->v1->y) ||
+						self->values[i] == &(c[j]->line1->v2->x) ||
+						self->values[i] == &(c[j]->line1->v2->y) ||
 						self->values[i] == &(c[j]->point1->x) ||
 						self->values[i] == &(c[j]->point1->y) ||
 						self->values[i] == &(c[j]->point2->x) ||
 						self->values[i] == &(c[j]->point2->y) ||
-						self->values[i] == &(c[j]->arc1->v1.x) ||
-						self->values[i] == &(c[j]->arc1->v1.y) ||
-						self->values[i] == &(c[j]->arc1->v2.x) ||
-						self->values[i] == &(c[j]->arc1->v2.y) ||
-						self->values[i] == &(c[j]->arc1->center.x) ||
-						self->values[i] == &(c[j]->arc1->center.y) ||
-						self->values[i] == &(c[j]->arc2->v1.x) ||
-						self->values[i] == &(c[j]->arc2->v1.y) ||
-						self->values[i] == &(c[j]->arc2->v2.x) ||
-						self->values[i] == &(c[j]->arc2->v2.y) ||
-						self->values[i] == &(c[j]->arc2->center.x) ||
-						self->values[i] == &(c[j]->arc2->center.y) ) 
+						self->values[i] == &(c[j]->arc1->v1->x) ||
+						self->values[i] == &(c[j]->arc1->v1->y) ||
+						self->values[i] == &(c[j]->arc1->v2->x) ||
+						self->values[i] == &(c[j]->arc1->v2->y) ||
+						self->values[i] == &(c[j]->arc1->center->x) ||
+						self->values[i] == &(c[j]->arc1->center->y) ||
+						self->values[i] == &(c[j]->arc2->v1->x) ||
+						self->values[i] == &(c[j]->arc2->v1->y) ||
+						self->values[i] == &(c[j]->arc2->v2->x) ||
+						self->values[i] == &(c[j]->arc2->v2->y) ||
+						self->values[i] == &(c[j]->arc2->center->x) ||
+						self->values[i] == &(c[j]->arc2->center->y) ) 
 				{
 					fprintf(fp, "constraint match: %d\n", j);
 				}
@@ -263,18 +276,18 @@ int parm_map_init(parm_map_t *self, const constraint_t *c[], int c_count)
 	for(i=0; i < c_count; i++) {
 		switch(c[i]->type) {
 		case CT_LINE_LENGTH:
-			map_add(self, &(c[i]->line1->v1.x) );
-			map_add(self, &(c[i]->line1->v1.y) );
-			map_add(self, &(c[i]->line1->v2.x) );
-			map_add(self, &(c[i]->line1->v2.y) );
+			map_add(self, &(c[i]->line1->v1->x) );
+			map_add(self, &(c[i]->line1->v1->y) );
+			map_add(self, &(c[i]->line1->v2->x) );
+			map_add(self, &(c[i]->line1->v2->y) );
 			break;
 		case CT_LINE_HORIZ:
-			map_add(self, &(c[i]->line1->v1.y) );
-			map_add(self, &(c[i]->line1->v2.y) );
+			map_add(self, &(c[i]->line1->v1->y) );
+			map_add(self, &(c[i]->line1->v2->y) );
 			break;
 		case CT_LINE_VERT:
-			map_add(self, &(c[i]->line1->v1.x) );
-			map_add(self, &(c[i]->line1->v2.x) );
+			map_add(self, &(c[i]->line1->v1->x) );
+			map_add(self, &(c[i]->line1->v2->x) );
 			break;
 		case CT_POINT_POINT_COINCIDENT:
 		case CT_POINT_POINT_DIST:

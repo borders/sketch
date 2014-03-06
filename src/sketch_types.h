@@ -73,9 +73,9 @@ struct _sketch_line {
 struct _sketch_arc {
 	sketch_base_t base;
 
-	coord_2D_t v1;
-	coord_2D_t v2;
-	coord_2D_t center;
+	sketch_point_t *v1;
+	sketch_point_t *v2;
+	sketch_point_t *center;
 };
 	
 struct _sketch_circle {
