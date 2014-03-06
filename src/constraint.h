@@ -46,8 +46,8 @@ struct _constraint {
 	
 	sketch_line_t *line1;
 	sketch_line_t *line2;
-	coord_2D_t *point1;
-	coord_2D_t *point2;
+	sketch_point_t *point1;
+	sketch_point_t *point2;
 	sketch_arc_t *arc1;
 	sketch_arc_t *arc2;
 
@@ -81,7 +81,7 @@ int constraint_init_line_length(constraint_t *self, sketch_line_t *line,
                                 double length);
 int constraint_init_line_horiz(constraint_t *self, sketch_line_t *line);
 int constraint_init_line_vert(constraint_t *self, sketch_line_t *line);
-int constraint_init_p_p_coinc(constraint_t *self, coord_2D_t *p1, coord_2D_t *p2);
-int constraint_init_p_p_dist(constraint_t *self, coord_2D_t *p1, coord_2D_t *p2, double dist);
+int constraint_init_p_p_coinc(constraint_t *self, sketch_point_t *p1, sketch_point_t *p2);
+int constraint_init_p_p_dist(constraint_t *self, sketch_point_t *p1, sketch_point_t *p2, double dist);
 
 #endif

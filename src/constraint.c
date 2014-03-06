@@ -183,7 +183,7 @@ int constraint_init_line_vert(constraint_t *self, sketch_line_t *line)
 	return 0;
 }
 
-int constraint_init_p_p_coinc(constraint_t *self, coord_2D_t *p1, coord_2D_t *p2)
+int constraint_init_p_p_coinc(constraint_t *self, sketch_point_t *p1, sketch_point_t *p2)
 {
 	int ret = constraint_init(self, CT_POINT_POINT_COINCIDENT);
 	if (ret != 0)
@@ -193,7 +193,7 @@ int constraint_init_p_p_coinc(constraint_t *self, coord_2D_t *p1, coord_2D_t *p2
 	return 0;
 }
 
-int constraint_init_p_p_dist(constraint_t *self, coord_2D_t *p1, coord_2D_t *p2, double dist)
+int constraint_init_p_p_dist(constraint_t *self, sketch_point_t *p1, sketch_point_t *p2, double dist)
 {
 	int ret = constraint_init(self, CT_POINT_POINT_DIST);
 	if (ret != 0)
