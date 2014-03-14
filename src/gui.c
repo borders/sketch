@@ -5,6 +5,7 @@
 #include <math.h>
 
 #include <gtk/gtk.h>
+#include <gdk/gdkkeysyms.h>
 
 #include "gui.h"
 #include "main.h"
@@ -192,6 +193,25 @@ static int select_sketch_object(double x, double y, double tol)
   return something_changed;
 }
 
+static void start_pan(gui_t *gui, double x, double y)
+{
+  printf("starting pan\n");
+  gui->panning = 1;
+  gui->pan_start_x = x;
+  gui->pan_start_y = y;
+  gui->pan_start_xmin = gui->xmin;
+  gui->pan_start_xmax = gui->xmax;
+  gui->pan_start_ymin = gui->ymin;
+  gui->pan_start_ymax = gui->ymax;
+}
+
+static void end_pan(gui_t *gui)
+{
+  printf("ending pan\n");
+  gui->panning = 0;
+  gtk_widget_queue_draw(gui->canvas);
+}
+
 gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
   gui_t *gui = (gui_t *)data;
@@ -199,77 +219,71 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
   {
   case GDK_BUTTON_PRESS:
 
-    // check for start of pan
     if(event->button == 3) 
     {
-      printf("starting pan\n");
-      gui->panning = 1;
-      gui->pan_start_x = event->x;
-      gui->pan_start_y = event->y;
-      gui->pan_start_xmin = gui->xmin;
-      gui->pan_start_xmax = gui->xmax;
-      gui->pan_start_ymin = gui->ymin;
-      gui->pan_start_ymax = gui->ymax;
+      start_pan(gui, event->x, event->y);
     }
-
-    if(gui->state.draw_active) 
+    else if(event->button == 1) 
     {
-      switch(gui->state.active_tool) 
+      if(gui->state.draw_active) 
       {
-        case TOOL_NONE:
-          printf("Shouldn't be here!\n");
-          break;
-        case TOOL_LINE: 
+        switch(gui->state.active_tool) 
         {
-          double end_xp, end_yp;
-          end_xp = event->x;
-          end_yp = event->y;
-          double end_xu, end_yu;
-          end_xu = px_to_user_x(gui, end_xp);
-          end_yu = px_to_user_y(gui, end_yp);
-          printf("  px::   start: (%g,%g)  end: (%g,%g)\n", 
-              gui->state.start_x, gui->state.start_y,
-              end_xp, end_yp);
-          printf("  user:: start: (%g,%g)  end: (%g,%g)\n",
-              gui->state.start_x, gui->state.start_y,
-              end_xu, end_yu);
-
-          sketch_line_t *line = sketch_line_alloc();
-          app_data.sketch[app_data.sketch_count++] = (sketch_base_t *)line;
-          coord_2D_t start, end;
-          start.x = gui->state.start_x;
-          start.y = gui->state.start_y;
-          end.x = end_xu;
-          end.y = end_yu;
-          sketch_line_init(line, &start, &end);
-          gui->state.draw_active = false;
-          gtk_widget_queue_draw(gui->canvas);
-          break;
-        }
-        default:  
-          printf("Unsupported tool!\n");
-      }
-    } 
-    else 
-    {
-      switch(gui->state.active_tool) 
-      {
-        case TOOL_NONE:
-          // Select a sketch object
-          if( select_sketch_object(px_to_user_x(gui, event->x), 
-                px_to_user_y(gui, event->y), 5.0 / fabs(gui->x_m) ) ) 
+          case TOOL_NONE:
+            printf("Shouldn't be here!\n");
+            break;
+          case TOOL_LINE: 
           {
+            double end_xp, end_yp;
+            end_xp = event->x;
+            end_yp = event->y;
+            double end_xu, end_yu;
+            end_xu = px_to_user_x(gui, end_xp);
+            end_yu = px_to_user_y(gui, end_yp);
+            printf("  px::   start: (%g,%g)  end: (%g,%g)\n", 
+                gui->state.start_x, gui->state.start_y,
+                end_xp, end_yp);
+            printf("  user:: start: (%g,%g)  end: (%g,%g)\n",
+                gui->state.start_x, gui->state.start_y,
+                end_xu, end_yu);
+
+            sketch_line_t *line = sketch_line_alloc();
+            app_data.sketch[app_data.sketch_count++] = (sketch_base_t *)line;
+            coord_2D_t start, end;
+            start.x = gui->state.start_x;
+            start.y = gui->state.start_y;
+            end.x = end_xu;
+            end.y = end_yu;
+            sketch_line_init(line, &start, &end);
+            gui->state.draw_active = false;
             gtk_widget_queue_draw(gui->canvas);
+            break;
           }
-          break;
-        case TOOL_LINE:
-          // Start of a line
-          gui->state.draw_active = true;
-          gui->state.start_x = px_to_user_x(gui, event->x);
-          gui->state.start_y = px_to_user_y(gui, event->y);
-          break;
-        default:  
-          printf("Unsupported tool!\n");
+          default:  
+            printf("Unsupported tool!\n");
+        }
+      } 
+      else 
+      {
+        switch(gui->state.active_tool) 
+        {
+          case TOOL_NONE:
+            // Select a sketch object
+            if( select_sketch_object(px_to_user_x(gui, event->x), 
+                  px_to_user_y(gui, event->y), 5.0 / fabs(gui->x_m) ) ) 
+            {
+              gtk_widget_queue_draw(gui->canvas);
+            }
+            break;
+          case TOOL_LINE:
+            // Start of a line
+            gui->state.draw_active = true;
+            gui->state.start_x = px_to_user_x(gui, event->x);
+            gui->state.start_y = px_to_user_y(gui, event->y);
+            break;
+          default:  
+            printf("Unsupported tool!\n");
+        }
       }
     }
 
@@ -278,11 +292,7 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
     if(event->button == 3) 
     {
       if(gui->panning) 
-      {
-        printf("stop pan\n");
-        gui->panning = 0;
-        gtk_widget_queue_draw(gui->canvas);
-      }
+        end_pan(gui);
     }
     break;
   default:
@@ -293,18 +303,34 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
   return TRUE;
 }
 
+gboolean key_release_cb(GtkWidget *widget, GdkEventKey *event, gpointer data)
+{
+  gui_t *gui = (gui_t *)data;
+
+  if(event->keyval == GDK_KEY_space)
+  { // space bar
+    if(gui->panning)
+    {
+      end_pan(gui);
+    }
+  }
+  else
+  {
+    printf("got key release: %c = 0x%02X (%d)\n", event->keyval, event->keyval, 
+        event->state);
+    if(event->state & GDK_SHIFT_MASK)
+      printf(" shift\n");
+    if(event->state & GDK_CONTROL_MASK)
+      printf(" control\n");
+    if(event->state & GDK_META_MASK)
+      printf(" meta\n");
+  }
+  return TRUE;
+}
+
 gboolean key_press_cb(GtkWidget *widget, GdkEventKey *event, gpointer data)
 {
   gui_t *gui = (gui_t *)data;
-  /*
-  printf("got key press: %c (%d)\n", event->keyval, event->state);
-  if(event->state & GDK_SHIFT_MASK)
-    printf(" shift\n");
-  if(event->state & GDK_CONTROL_MASK)
-    printf(" control\n");
-  if(event->state & GDK_META_MASK)
-    printf(" meta\n");
-  */
 
   if(event->keyval == 'z') 
   { // zoom in
@@ -340,6 +366,34 @@ gboolean key_press_cb(GtkWidget *widget, GdkEventKey *event, gpointer data)
     gtk_widget_queue_draw(gui->canvas);
 
   }
+  else if(event->keyval == GDK_KEY_Escape)
+  { // escape should cancel any active operation
+    if(gui->state.draw_active)
+    {
+      gui->state.draw_active = 0;
+      gtk_widget_queue_draw(gui->canvas);
+    }
+  }
+  else if(event->keyval == GDK_KEY_space)
+  { // space bar
+    if(!gui->panning)
+    {
+      gint x_px, y_px;
+      gtk_widget_get_pointer(gui->canvas, &x_px, &y_px);
+      start_pan(gui, x_px, y_px);
+    }
+  }
+  else
+  {
+    printf("got key press: %c = 0x%02X (%d)\n", event->keyval, event->keyval, 
+        event->state);
+    if(event->state & GDK_SHIFT_MASK)
+      printf(" shift\n");
+    if(event->state & GDK_CONTROL_MASK)
+      printf(" control\n");
+    if(event->state & GDK_META_MASK)
+      printf(" meta\n");
+  }
 
   return TRUE;
 }
@@ -364,7 +418,6 @@ gboolean mouse_motion_cb(GtkWidget *widget, GdkEventMotion *event, gpointer data
       gtk_widget_queue_draw(gui->canvas);
     }
   }
-
 
   if(gui->panning) 
   {
@@ -685,6 +738,9 @@ int gui_init(gui_t *self, int *argc, char ***argv)
 
   g_signal_connect(self->canvas, "key_press_event", 
       G_CALLBACK(key_press_cb), self);
+
+  g_signal_connect(self->canvas, "key_release_event", 
+      G_CALLBACK(key_release_cb), self);
 
   /* drawing "context" */
   self->drawer = draw_create(self->canvas);
