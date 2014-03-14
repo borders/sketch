@@ -11,7 +11,8 @@
 #define MAX_ITERATIONS 2000
 #define STOP_THRESH 1.0e-10
 
-struct _parm_map {
+struct _parm_map 
+{
 	double *values[MAP_CAPACITY];
 	int size;
 };
@@ -19,7 +20,8 @@ typedef struct _parm_map parm_map_t;
 
 typedef int iterate_cb_t(int i, void *data);
 
-struct _solver {
+struct _solver 
+{
 	int size;
 #if FDF
 	gsl_multimin_fdfminimizer *s;

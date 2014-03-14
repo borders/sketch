@@ -10,7 +10,8 @@ constraint_t *constraint_alloc(void)
 {
 	constraint_t *c;
 	c = calloc(1, sizeof(constraint_t));
-	if (c == NULL) {
+	if (c == NULL) 
+  {
 		ERROR("Out of memory");
 		return NULL;
 	}
@@ -105,7 +106,8 @@ int constraint_init(constraint_t *self, constraint_type_t type)
 	strcpy(self->name, "");
 	self->suppressed = 0;
 
-	switch(self->type) {
+	switch(self->type) 
+  {
 		case CT_POINT_X_COORD:
 			self->cost = &cost_point_x_coord;
 			break;
@@ -154,7 +156,7 @@ double constraint_cost(constraint_t *self)
 }
 
 int constraint_init_line_length(constraint_t *self, sketch_line_t *line, 
-                                double length)
+    double length)
 {
 	int ret = constraint_init(self, CT_LINE_LENGTH);
 	if (ret != 0)
@@ -183,7 +185,8 @@ int constraint_init_line_vert(constraint_t *self, sketch_line_t *line)
 	return 0;
 }
 
-int constraint_init_p_p_coinc(constraint_t *self, sketch_point_t *p1, sketch_point_t *p2)
+int constraint_init_p_p_coinc(constraint_t *self, sketch_point_t *p1, 
+     sketch_point_t *p2)
 {
 	int ret = constraint_init(self, CT_POINT_POINT_COINCIDENT);
 	if (ret != 0)
@@ -193,7 +196,8 @@ int constraint_init_p_p_coinc(constraint_t *self, sketch_point_t *p1, sketch_poi
 	return 0;
 }
 
-int constraint_init_p_p_dist(constraint_t *self, sketch_point_t *p1, sketch_point_t *p2, double dist)
+int constraint_init_p_p_dist(constraint_t *self, sketch_point_t *p1, 
+    sketch_point_t *p2, double dist)
 {
 	int ret = constraint_init(self, CT_POINT_POINT_DIST);
 	if (ret != 0)

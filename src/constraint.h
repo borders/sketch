@@ -3,7 +3,8 @@
 
 #include "sketch_types.h"
 
-typedef enum {
+typedef enum 
+{
 	CT_POINT_X_COORD = 0,
 	CT_POINT_Y_COORD,
 
@@ -39,7 +40,8 @@ typedef enum {
 
 typedef struct _constraint constraint_t;
 
-struct _constraint {
+struct _constraint 
+{
 	constraint_type_t type;
 	char name[255];
 	char suppressed;
@@ -57,12 +59,14 @@ struct _constraint {
 	double (*cost)(constraint_t *);
 };
 
-typedef struct _constraint_list_item {
+typedef struct _constraint_list_item 
+{
 	constraint_t *constraint;
 	struct _constraint_list_item *next;
 } constraint_list_item_t;
 
-typedef struct {
+typedef struct 
+{
 	constraint_list_item_t *head;
 	constraint_list_item_t *tail;
 	int length;
@@ -81,7 +85,10 @@ int constraint_init_line_length(constraint_t *self, sketch_line_t *line,
                                 double length);
 int constraint_init_line_horiz(constraint_t *self, sketch_line_t *line);
 int constraint_init_line_vert(constraint_t *self, sketch_line_t *line);
-int constraint_init_p_p_coinc(constraint_t *self, sketch_point_t *p1, sketch_point_t *p2);
-int constraint_init_p_p_dist(constraint_t *self, sketch_point_t *p1, sketch_point_t *p2, double dist);
+int constraint_init_p_p_coinc(constraint_t *self, sketch_point_t *p1, 
+    sketch_point_t *p2);
+
+int constraint_init_p_p_dist(constraint_t *self, sketch_point_t *p1, 
+    sketch_point_t *p2, double dist);
 
 #endif

@@ -7,7 +7,8 @@
 #define MAX_NUM_SHAPES 100
 #define MAX_NUM_CONSTRAINTS 100
 
-typedef struct {
+typedef struct 
+{
 	sketch_base_t *sketch[MAX_NUM_SHAPES];
 	int sketch_count;
 

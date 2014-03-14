@@ -1,7 +1,8 @@
 #ifndef __DRAW_H__
 #define __DRAW_H__
 
-typedef enum {
+typedef enum 
+{
   ANCHOR_TOP_LEFT,
   ANCHOR_TOP_MIDDLE,
   ANCHOR_TOP_RIGHT,

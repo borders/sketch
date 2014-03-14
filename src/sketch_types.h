@@ -10,7 +10,8 @@ typedef struct _sketch_circle sketch_circle_t;
 
 #include "constraint.h"
 
-typedef enum {
+typedef enum 
+{
 	SHAPE_TYPE_POINT = 0,
 	SHAPE_TYPE_LINE,
 	SHAPE_TYPE_ARC,
@@ -20,7 +21,8 @@ typedef enum {
 	NUM_SHAPE_TYPES
 } sketch_shape_type_t;
 
-typedef enum {
+typedef enum 
+{
 	LINE_TYPE_SOLID = 0,
 	LINE_TYPE_DASHED,
 	LINE_TYPE_DOTTED,
@@ -28,14 +30,16 @@ typedef enum {
 	NUM_LINE_TYPES
 } line_type_t;
 
-typedef struct {
+typedef struct 
+{
 	double r;
 	double g;
 	double b;
 } color_t;
 
 typedef struct _sketch_base sketch_base_t;
-struct _sketch_base {
+struct _sketch_base 
+{
 	sketch_shape_type_t type;
 
 	//constraint_list_t constraints;
@@ -51,26 +55,30 @@ struct _sketch_base {
 	color_t line_color;
 };
 
-struct _coord_2D {
+struct _coord_2D 
+{
 	double x;
 	double y;
 };
 
-struct _sketch_point {
+struct _sketch_point 
+{
 	sketch_base_t base;
 
 	double x;
 	double y;
 };
 
-struct _sketch_line {
+struct _sketch_line 
+{
 	sketch_base_t base;
 
 	sketch_point_t *v1;
 	sketch_point_t *v2;
 };
 	
-struct _sketch_arc {
+struct _sketch_arc 
+{
 	sketch_base_t base;
 
 	sketch_point_t *v1;
@@ -78,7 +86,8 @@ struct _sketch_arc {
 	sketch_point_t *center;
 };
 	
-struct _sketch_circle {
+struct _sketch_circle 
+{
 	sketch_base_t base;
 	coord_2D_t center;
 	double radius;
@@ -97,12 +106,13 @@ sketch_arc_t *sketch_arc_alloc(void);
 sketch_circle_t *sketch_circle_alloc(void);
 
 void sketch_line_init(sketch_line_t *self, 
-                      coord_2D_t const *v1, coord_2D_t const *v2);
+    coord_2D_t const *v1, coord_2D_t const *v2);
+
 void sketch_circle_init(sketch_circle_t *self, 
-                        coord_2D_t const *center, double radius);
+    coord_2D_t const *center, double radius);
 
 void sketch_line_get_point_angle_len(sketch_line_t *self, 
-                         coord_2D_t *point, double *theta, double *length);
+    coord_2D_t *point, double *theta, double *length);
 
 int sketch_line_fini(sketch_line_t *self);
 int sketch_arc_fini(sketch_arc_t *self);
