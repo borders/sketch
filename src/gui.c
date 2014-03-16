@@ -600,6 +600,39 @@ static void draw_ruler(gui_t *self)
 
 }
 
+
+static void draw_sketch_line(sketch_base_t *obj, gui_t *gui)
+{
+  draw_ptr dp = gui->drawer;
+
+  if(obj->is_selected) 
+  {
+    draw_set_color(dp, 1,0,0);
+  }
+  if(obj->is_highlighted) 
+  {
+    draw_set_line_width(dp, 3);
+  }
+  sketch_line_t *line = (sketch_line_t *)obj;
+  draw_line(dp, 
+      user_to_px_x(gui, line->v1->x), user_to_px_y(gui, line->v1->y),
+      user_to_px_x(gui, line->v2->x), user_to_px_y(gui, line->v2->y) );
+
+  if(obj->is_selected || obj->is_highlighted)
+  {
+    if(obj->is_selected)
+      draw_set_color(dp, 1,0,0);
+    else 
+      draw_set_color(dp, 0,0,1);
+
+    draw_circle_filled(dp, 
+        user_to_px_x(gui, line->v1->x), user_to_px_y(gui, line->v1->y), 5);
+    draw_circle_filled(dp, 
+        user_to_px_x(gui, line->v2->x), user_to_px_y(gui, line->v2->y), 5);
+
+  }
+}
+
 gboolean draw_canvas(GtkWidget *widget, GdkEventExpose *event, gpointer data) 
 {
   gui_t *gui = (gui_t *)data;
@@ -655,18 +688,7 @@ gboolean draw_canvas(GtkWidget *widget, GdkEventExpose *event, gpointer data)
     {
       case SHAPE_TYPE_LINE: 
       {
-        if(obj->is_selected) 
-        {
-          draw_set_color(dp, 1,0,0);
-        }
-        if(obj->is_highlighted) 
-        {
-          draw_set_line_width(dp, 3);
-        }
-        sketch_line_t *line = (sketch_line_t *)obj;
-        draw_line(dp, 
-            user_to_px_x(gui, line->v1->x), user_to_px_y(gui, line->v1->y),
-            user_to_px_x(gui, line->v2->x), user_to_px_y(gui, line->v2->y) );
+        draw_sketch_line(obj, gui);
         break;
       }
       case SHAPE_TYPE_ARC:
@@ -701,6 +723,7 @@ int gui_init(gui_t *self, int *argc, char ***argv)
   gtk_box_pack_start(GTK_BOX(self->top_level_vbox), bb->hbox, FALSE, FALSE, 0);
 
   /* Select Button */
+  //bb->select_btn = gtk_button_new_with_label("Select");
   bb->select_btn = gtk_button_new_with_label("Select");
   gtk_box_pack_start(GTK_BOX(bb->hbox), bb->select_btn, FALSE, FALSE, 0);
   g_signal_connect(bb->select_btn, "clicked", G_CALLBACK(select_cb), self);
