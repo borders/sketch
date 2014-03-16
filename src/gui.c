@@ -749,7 +749,25 @@ int gui_init(gui_t *self, int *argc, char ***argv)
   */
   GdkPixbuf *pb = gdk_pixbuf_new_from_file("button_icon.svg", NULL);
   assert(pb);
-  GtkWidget *button_image = gtk_image_new_from_pixbuf(pb);
+
+  gint pbw = gdk_pixbuf_get_width(pb);
+  gint pbh = gdk_pixbuf_get_height(pb);
+  printf("original button dims: %d x %d\n", pbw, pbh);
+  int button_dim = 40;
+  if(pbw > pbh)
+  {
+    pbh = (1.0 * button_dim / pbw) * pbh;
+    pbw = button_dim;
+  }
+  else
+  {
+    pbw = (1.0 * button_dim / pbh) * pbw;
+    pbh = button_dim;
+  }
+  printf("scaled button dims: %d x %d\n", pbw, pbh);
+  GdkPixbuf *pb2 = gdk_pixbuf_scale_simple(pb, pbw, pbh, GDK_INTERP_HYPER);
+
+  GtkWidget *button_image = gtk_image_new_from_pixbuf(pb2);
   assert(button_image);
   GtkWidget *toggle = gtk_toggle_button_new();
   assert(toggle);
