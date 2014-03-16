@@ -739,14 +739,6 @@ int gui_init(gui_t *self, int *argc, char ***argv)
   g_signal_connect(bb->arc_btn, "clicked", G_CALLBACK(arc_cb), self);
 
   /* TEST: tool button with image */
-  /*
-  GSList *list = gdk_pixbuf_get_formats();
-  while(list != NULL) {
-    struct GdkPixbufFormat *p = (struct GdkPixbufFormat *)(list->data);
-    printf("format: %s\n", gdk_pixbuf_format_get_name(p));
-    list = list->next;
-  }
-  */
   GdkPixbuf *pb = gdk_pixbuf_new_from_file("button_icon.svg", NULL);
   assert(pb);
 
@@ -766,6 +758,7 @@ int gui_init(gui_t *self, int *argc, char ***argv)
   }
   printf("scaled button dims: %d x %d\n", pbw, pbh);
   GdkPixbuf *pb2 = gdk_pixbuf_scale_simple(pb, pbw, pbh, GDK_INTERP_HYPER);
+  g_object_unref(pb);
 
   GtkWidget *button_image = gtk_image_new_from_pixbuf(pb2);
   assert(button_image);
