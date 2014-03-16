@@ -6,40 +6,65 @@
 #include <gtk/gtk.h>
 #include "draw.h"
 
-typedef enum {
-	TOOL_NONE,
-	TOOL_LINE,
-	TOOL_ARC
+#define MAX_SELECTIONS 100
+
+typedef enum 
+{
+  TOOL_NONE,
+  TOOL_LINE,
+  TOOL_ARC
 } tool_t;
 
-struct _button_bar {
-	GtkWidget *hbox;
+struct _button_bar 
+{
+  GtkWidget *hbox;
 
-	GtkWidget *select_btn;
-	GtkWidget *line_btn;
-	GtkWidget *arc_btn;
+  GtkWidget *select_btn;
+  GtkWidget *line_btn;
+  GtkWidget *arc_btn;
 };
 
-struct _status_bar {
-	GtkWidget *hbox;
-	GtkWidget *left_label;
-	GtkWidget *right_label;
+struct _status_bar 
+{
+  GtkWidget *hbox;
+  GtkWidget *left_label;
+  GtkWidget *right_label;
 };
 
-struct _state {
-	bool draw_active;
-	tool_t active_tool;
-	double start_x;
-	double start_y;
-	double end_x;
-	double end_y;
+typedef enum
+{
+  SELECT_TYPE_SKETCH,
+  SELECT_TYPE_CONSTRAINT,
+
+  NUM_SELECT_TYPES
+} select_type_t;
+
+typedef struct 
+{
+  select_type_t type;
+  void *object;
+} selection_t;
+
+
+struct _state 
+{
+  bool draw_active;
+  tool_t active_tool;
+  double start_x;
+  double start_y;
+  double end_x;
+  double end_y;
+
+  selection_t selections[MAX_SELECTIONS];
+  int selection_count;
 };
 
 #define MAX_NUM_MAJOR_TICS (50)
 #define MAJOR_TIC_LABEL_SIZE  (150)
 #define NUM_REQ_TICS (10)
 
-typedef struct axis_t {
+typedef struct axis_t 
+{
 	int type; // 0=x, 1=y
 	double major_tic_values[MAX_NUM_MAJOR_TICS];
 	char major_tic_labels[MAX_NUM_MAJOR_TICS][MAJOR_TIC_LABEL_SIZE];
