@@ -738,6 +738,25 @@ int gui_init(gui_t *self, int *argc, char ***argv)
   gtk_box_pack_start(GTK_BOX(bb->hbox), bb->arc_btn, FALSE, FALSE, 0);
   g_signal_connect(bb->arc_btn, "clicked", G_CALLBACK(arc_cb), self);
 
+  /* TEST: tool button with image */
+  /*
+  GSList *list = gdk_pixbuf_get_formats();
+  while(list != NULL) {
+    struct GdkPixbufFormat *p = (struct GdkPixbufFormat *)(list->data);
+    printf("format: %s\n", gdk_pixbuf_format_get_name(p));
+    list = list->next;
+  }
+  */
+  GdkPixbuf *pb = gdk_pixbuf_new_from_file("button_icon.svg", NULL);
+  assert(pb);
+  GtkWidget *button_image = gtk_image_new_from_pixbuf(pb);
+  assert(button_image);
+  GtkWidget *toggle = gtk_toggle_button_new();
+  assert(toggle);
+  gtk_container_add( (GtkContainer *)toggle, button_image);
+  gtk_box_pack_start(GTK_BOX(bb->hbox), toggle, FALSE, FALSE, 0);
+  
+
   /* Canvas */
   self->canvas = gtk_drawing_area_new();
   gtk_widget_set_size_request(self->canvas, 500,400);
