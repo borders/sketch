@@ -157,6 +157,8 @@ static int highlight_sketch_line(sketch_line_t *s, double x, double y, double to
       s->base.is_highlighted = 1;
       changed = 1;
     }
+    s->v1->base.is_highlighted = 1;
+    s->v2->base.is_highlighted = 1;
   } 
   else 
   {
@@ -165,6 +167,8 @@ static int highlight_sketch_line(sketch_line_t *s, double x, double y, double to
       s->base.is_highlighted = 0;
       changed = 1;
     }
+    s->v1->base.is_highlighted = 0;
+    s->v2->base.is_highlighted = 0;
   }
   return changed;
 }
@@ -304,7 +308,6 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
                 5.0 / fabs(gui->x_m) );
             if(o != NULL) 
             {
-              //printf("a sketch object was select\n");
               gui->state.selections[0].type = SELECT_TYPE_SKETCH;
               gui->state.selections[0].object = o;
               gui->state.selection_count = 1;
@@ -655,10 +658,10 @@ static void draw_sketch_point(sketch_base_t *obj, gui_t *gui)
     draw_set_color(dp, 1,0,0);
     radius = 4.0;
   }
-
-  if(obj->is_highlighted) 
+  else if(obj->is_highlighted) 
   {
     draw_set_color(dp, 0,1,0);
+    radius = 3.0;
   }
 
   draw_circle_filled(dp, user_to_px_x(gui, pt->x), user_to_px_y(gui, pt->y), radius);
