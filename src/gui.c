@@ -249,14 +249,14 @@ static void end_pan(gui_t *gui)
 static void clear_sketch_select(sketch_base_t *s)
 {
   // first clear its own flag
-  printf("clearing sketch object's select flag\n");
+  //printf("clearing sketch object's select flag\n");
   s->is_selected = 0;
 
   // then clear all it's children's flags
   int i;
   for(i=0; i < s->child_count; i++)
   {
-    printf("clearing sketch object's child select flag\n");
+    //printf("clearing sketch object's child select flag\n");
     clear_sketch_select(s->children[i]);
   }
 }
@@ -292,6 +292,57 @@ static void update_selection_flags(gui_t *gui)
     }
   }
 
+}
+
+static void selection_set(gui_t *gui, selection_t *sel)
+{
+  printf("setting selection\n");
+  gui->state.selections[0] = *sel;
+  gui->state.selection_count = 1;
+  update_selection_flags(gui);
+}
+
+static void selection_add_or_remove(gui_t *gui, selection_t *sel)
+{
+  assert(sel->type != SELECT_TYPE_NONE);
+
+  // first check if this object is already selected. If it is,
+  // remove it and return
+  int i;
+  for(i=0; i < gui->state.selection_count; i++)
+  {
+    if(sel->object == gui->state.selections[i].object)
+    {
+      printf("object already selected - removing it\n");
+      int j;
+      for(j = i+1; j < gui->state.selection_count; j++)
+      {
+        gui->state.selections[j-1] = gui->state.selections[j];
+      }
+      gui->state.selection_count--;
+      update_selection_flags(gui);
+      return;
+    }
+  }
+
+  // make sure there's room to add it
+  if(gui->state.selection_count >= MAX_SELECTIONS)
+  {
+    fprintf(stderr, "no room to add selection!\n");
+    return;
+  }
+  printf("adding selection\n");
+  gui->state.selections[gui->state.selection_count++] = *sel;
+  update_selection_flags(gui);
+}
+
+static void selection_clear(gui_t *gui)
+{
+  printf("clearing selection\n");
+  gui->state.selections[0].type = SELECT_TYPE_NONE;
+  gui->state.selections[0].object = NULL;
+  gui->state.selection_count = 0;
+  update_selection_flags(gui);
 }
 
 gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data)
@@ -358,21 +409,30 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
                 px_to_user_x(gui, event->x), 
                 px_to_user_y(gui, event->y), 
                 5.0 / fabs(gui->x_m) );
-            if(sel.type != SELECT_TYPE_NONE) 
+
+            if(sel.type == SELECT_TYPE_NONE) 
             {
-              printf("selected something\n");
-              gui->state.selections[0] = sel;
-              gui->state.selection_count = 1;
-              update_selection_flags(gui);
-              gtk_widget_queue_draw(gui->canvas);
+              if(event->state & GDK_SHIFT_MASK)
+              {
+                printf("no change to selection\n");
+              }
+              else
+              {
+                selection_clear(gui);
+              }
             }
             else
             {
-              printf("nothing selected\n");
-              gui->state.selection_count = 0;
-              update_selection_flags(gui);
-              gtk_widget_queue_draw(gui->canvas);
+              if(event->state & GDK_SHIFT_MASK)
+              {
+                selection_add_or_remove(gui, &sel);
+              }
+              else
+              {
+                selection_set(gui, &sel);
+              }
             }
+            gtk_widget_queue_draw(gui->canvas);
             break;
           }
           case TOOL_LINE:
