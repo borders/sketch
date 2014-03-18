@@ -121,31 +121,6 @@ static int sketch_line_is_pt_near(sketch_line_t *s, double x, double y, double t
   return 0;
 }
 
-static sketch_base_t *select_sketch_line(sketch_line_t *s, double x, double y, double tol)
-{
-  // first check its endpoints
-  if(sketch_point_is_pt_near(s->v1, x, y, tol))
-  {
-    s->v1->base.is_selected = !s->v1->base.is_selected;
-    return (sketch_base_t *)(s->v1);
-  }
-
-  if(sketch_point_is_pt_near(s->v2, x, y, tol))
-  {
-    s->v2->base.is_selected = !s->v2->base.is_selected;
-    return (sketch_base_t *)(s->v2);
-  }
-
-  // then the line itself
-  if(sketch_line_is_pt_near(s, x, y, tol)) 
-  {
-    s->base.is_selected = !s->base.is_selected;
-    return (sketch_base_t *)s;
-  }
- 
-  return NULL;
-}
-
 static int highlight_sketch_line(sketch_line_t *s, double x, double y, double tol)
 {
   int changed = 0;
@@ -198,9 +173,22 @@ static int highlight_sketch_objects(double x, double y, double tol)
   return something_changed;
 }
 
-static sketch_base_t *select_sketch_object(double x, double y, double tol)
+static 
+int line_is_near(sketch_line_t *line, double x_u, double y_u, double tol_u)
+{
+}
+
+static 
+int point_is_near(sketch_point_t *pt, double x_u, double y_u, double tol_u)
+{
+}
+
+static 
+selection_t get_object_at_location(double x_u, double y_u, double tol_u)
 {
   int i;
+  selection_t sel = {SELECT_TYPE_NONE, NULL};
+
   for(i=0; i<app_data.sketch_count; i++) 
   {
     sketch_base_t *s = app_data.sketch[i];
@@ -208,10 +196,26 @@ static sketch_base_t *select_sketch_object(double x, double y, double tol)
     {
       sketch_base_t *o;
       case SHAPE_TYPE_LINE:
-        o = select_sketch_line((sketch_line_t *)s, x, y, tol);
-        if(o != NULL) 
+        // first check endpoints
+        if(sketch_point_is_pt_near(((sketch_line_t *)s)->v1, x_u, y_u, tol_u))
         {
-          return o;
+          sel.type = SELECT_TYPE_POINT;
+          sel.object = ((sketch_line_t *)s)->v1;
+          return sel;
+        }
+        if(sketch_point_is_pt_near(((sketch_line_t *)s)->v2, x_u, y_u, tol_u))
+        {
+          sel.type = SELECT_TYPE_POINT;
+          sel.object = ((sketch_line_t *)s)->v2;
+          return sel;
+        }
+
+        // then the line itself
+        if(sketch_line_is_pt_near((sketch_line_t *)s, x_u, y_u, tol_u))
+        {
+          sel.type = SELECT_TYPE_LINE;
+          sel.object = (sketch_line_t *)s;
+          return sel;
         }
         break;
       case SHAPE_TYPE_ARC:
@@ -221,7 +225,6 @@ static sketch_base_t *select_sketch_object(double x, double y, double tol)
         printf("Unsupported shape type!\n");
     }
   }
-  return NULL;
 }
 
 static void start_pan(gui_t *gui, double x, double y)
@@ -243,6 +246,54 @@ static void end_pan(gui_t *gui)
   gtk_widget_queue_draw(gui->canvas);
 }
 
+static void clear_sketch_select(sketch_base_t *s)
+{
+  // first clear its own flag
+  printf("clearing sketch object's select flag\n");
+  s->is_selected = 0;
+
+  // then clear all it's children's flags
+  int i;
+  for(i=0; i < s->child_count; i++)
+  {
+    printf("clearing sketch object's child select flag\n");
+    clear_sketch_select(s->children[i]);
+  }
+}
+
+
+static void clear_all_selection_flags(void)
+{
+  int i;
+  for(i=0; i<app_data.sketch_count; i++) 
+  {
+    clear_sketch_select(app_data.sketch[i]);
+  }
+}
+
+
+static void update_selection_flags(gui_t *gui)
+{
+  // first, clear all flags recursively
+  clear_all_selection_flags();
+
+  int j;
+  for(j=0; j < gui->state.selection_count; j++)
+  {
+    switch(gui->state.selections[j].type)
+    {
+      case SELECT_TYPE_LINE:
+      case SELECT_TYPE_POINT:
+        ((sketch_base_t *)(gui->state.selections[j].object))->is_selected = 1;
+        printf("setting selected flag\n");
+        break;
+      default:
+        printf("unhandled selection type\n");
+    }
+  }
+
+}
+
 gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
   gui_t *gui = (gui_t *)data;
@@ -250,10 +301,12 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
   {
   case GDK_BUTTON_PRESS:
 
+    // right-click
     if(event->button == 3) 
     {
       start_pan(gui, event->x, event->y);
     }
+    // left-click
     else if(event->button == 1) 
     {
       if(gui->state.draw_active) 
@@ -300,22 +353,25 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
         {
           case TOOL_NONE:
           {
-            sketch_base_t *o;
             // Select a sketch object
-            o = select_sketch_object(
+            selection_t sel = get_object_at_location(
                 px_to_user_x(gui, event->x), 
                 px_to_user_y(gui, event->y), 
                 5.0 / fabs(gui->x_m) );
-            if(o != NULL) 
+            if(sel.type != SELECT_TYPE_NONE) 
             {
-              gui->state.selections[0].type = SELECT_TYPE_SKETCH;
-              gui->state.selections[0].object = o;
+              printf("selected something\n");
+              gui->state.selections[0] = sel;
               gui->state.selection_count = 1;
+              update_selection_flags(gui);
               gtk_widget_queue_draw(gui->canvas);
             }
             else
             {
+              printf("nothing selected\n");
               gui->state.selection_count = 0;
+              update_selection_flags(gui);
+              gtk_widget_queue_draw(gui->canvas);
             }
             break;
           }
