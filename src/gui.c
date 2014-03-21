@@ -878,6 +878,60 @@ static void state_init(struct _state *s)
   s->selection_count = 0;
 }
 
+static GtkWidget *toolbar_button_new(const char *image_path, int size, const char *label)
+{
+  GtkToolItem *b = gtk_toggle_tool_button_new();
+
+  if(image_path != NULL)
+  {
+    GdkPixbuf *pb = gdk_pixbuf_new_from_file(image_path, NULL);
+    assert(pb);
+
+    gint pbw = gdk_pixbuf_get_width(pb);
+    gint pbh = gdk_pixbuf_get_height(pb);
+    if(pbw > pbh)
+    {
+      pbh = (1.0 * size / pbw) * pbh;
+      pbw = size;
+    }
+    else
+    {
+      pbw = (1.0 * size / pbh) * pbw;
+      pbh = size;
+    }
+    GdkPixbuf *pb2 = gdk_pixbuf_scale_simple(pb, pbw, pbh, GDK_INTERP_HYPER);
+    g_object_unref(pb);
+
+    GtkWidget *button_image = gtk_image_new_from_pixbuf(pb2);
+    assert(button_image);
+    gtk_tool_button_set_icon_widget((GtkToolButton *)b, button_image);
+  }
+  else
+  {
+    gtk_tool_item_set_is_important((GtkToolItem *)b, TRUE);
+    gtk_tool_button_set_label_widget((GtkToolButton *)b, NULL);
+    gtk_tool_button_set_label((GtkToolButton *)b, label);
+  }
+  return (GtkWidget *)b;
+}
+
+void make_tools_toolbar(gui_t *self)
+{
+  struct _tools_tb *p = &(self->tools_tb);
+  p->tb = gtk_toolbar_new();
+
+  p->select_btn = toolbar_button_new(NULL, 30, "Select");
+  gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->select_btn, -1);
+
+  p->line_btn = toolbar_button_new("button_icon.svg", 30, NULL);
+  gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->line_btn, -1);
+
+  p->arc_btn = toolbar_button_new(NULL, 30, "Arc");
+  gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->arc_btn, -1);
+
+  gtk_box_pack_start(GTK_BOX(self->top_level_vbox), p->tb, FALSE, FALSE, 0);
+}
+
 int gui_init(gui_t *self, int *argc, char ***argv)
 {
   struct _button_bar *bb = &(self->button_bar);
@@ -890,6 +944,8 @@ int gui_init(gui_t *self, int *argc, char ***argv)
 
   self->top_level_vbox = gtk_vbox_new(FALSE, 1);
   gtk_container_add(GTK_CONTAINER (self->window), self->top_level_vbox);
+
+  make_tools_toolbar(self);
 
   bb->hbox = gtk_hbox_new(FALSE, 1);
   gtk_box_pack_start(GTK_BOX(self->top_level_vbox), bb->hbox, FALSE, FALSE, 0);
@@ -909,36 +965,6 @@ int gui_init(gui_t *self, int *argc, char ***argv)
   bb->arc_btn = gtk_button_new_with_label("Arc");
   gtk_box_pack_start(GTK_BOX(bb->hbox), bb->arc_btn, FALSE, FALSE, 0);
   g_signal_connect(bb->arc_btn, "clicked", G_CALLBACK(arc_cb), self);
-
-  /* TEST: tool button with image */
-  GdkPixbuf *pb = gdk_pixbuf_new_from_file("button_icon.svg", NULL);
-  assert(pb);
-
-  gint pbw = gdk_pixbuf_get_width(pb);
-  gint pbh = gdk_pixbuf_get_height(pb);
-  printf("original button dims: %d x %d\n", pbw, pbh);
-  int button_dim = 40;
-  if(pbw > pbh)
-  {
-    pbh = (1.0 * button_dim / pbw) * pbh;
-    pbw = button_dim;
-  }
-  else
-  {
-    pbw = (1.0 * button_dim / pbh) * pbw;
-    pbh = button_dim;
-  }
-  printf("scaled button dims: %d x %d\n", pbw, pbh);
-  GdkPixbuf *pb2 = gdk_pixbuf_scale_simple(pb, pbw, pbh, GDK_INTERP_HYPER);
-  g_object_unref(pb);
-
-  GtkWidget *button_image = gtk_image_new_from_pixbuf(pb2);
-  assert(button_image);
-  GtkWidget *toggle = gtk_toggle_button_new();
-  assert(toggle);
-  gtk_container_add( (GtkContainer *)toggle, button_image);
-  gtk_box_pack_start(GTK_BOX(bb->hbox), toggle, FALSE, FALSE, 0);
-  
 
   /* Canvas */
   self->canvas = gtk_drawing_area_new();

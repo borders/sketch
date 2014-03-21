@@ -24,6 +24,15 @@ struct _button_bar
   GtkWidget *arc_btn;
 };
 
+struct _tools_tb 
+{
+  GtkWidget *tb;
+
+  GtkWidget *select_btn;
+  GtkWidget *line_btn;
+  GtkWidget *arc_btn;
+};
+
 struct _status_bar 
 {
   GtkWidget *hbox;
@@ -81,6 +90,7 @@ struct _gui {
 	GtkWidget *top_level_vbox;
 	GtkWidget *canvas;
 	struct _button_bar button_bar;
+  struct _tools_tb tools_tb;
 	struct _status_bar status_bar;
 	
 	struct _state state;
