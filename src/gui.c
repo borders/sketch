@@ -885,33 +885,38 @@ static GtkWidget *toolbar_button_new(const char *image_path, int size, const cha
   if(image_path != NULL)
   {
     GdkPixbuf *pb = gdk_pixbuf_new_from_file(image_path, NULL);
-    assert(pb);
-
-    gint pbw = gdk_pixbuf_get_width(pb);
-    gint pbh = gdk_pixbuf_get_height(pb);
-    if(pbw > pbh)
+    if(pb != NULL)
     {
-      pbh = (1.0 * size / pbw) * pbh;
-      pbw = size;
+      gint pbw = gdk_pixbuf_get_width(pb);
+      gint pbh = gdk_pixbuf_get_height(pb);
+      if(pbw > pbh)
+      {
+        pbh = (1.0 * size / pbw) * pbh;
+        pbw = size;
+      }
+      else
+      {
+        pbw = (1.0 * size / pbh) * pbw;
+        pbh = size;
+      }
+      GdkPixbuf *pb2 = gdk_pixbuf_scale_simple(pb, pbw, pbh, GDK_INTERP_HYPER);
+      g_object_unref(pb);
+
+      GtkWidget *button_image = gtk_image_new_from_pixbuf(pb2);
+      assert(button_image);
+      gtk_tool_button_set_icon_widget((GtkToolButton *)b, button_image);
+      return (GtkWidget *)b;
     }
     else
     {
-      pbw = (1.0 * size / pbh) * pbw;
-      pbh = size;
+      fprintf(stderr,
+          "Error loading button image file. Falling back to text label...\n");
     }
-    GdkPixbuf *pb2 = gdk_pixbuf_scale_simple(pb, pbw, pbh, GDK_INTERP_HYPER);
-    g_object_unref(pb);
+  }
 
-    GtkWidget *button_image = gtk_image_new_from_pixbuf(pb2);
-    assert(button_image);
-    gtk_tool_button_set_icon_widget((GtkToolButton *)b, button_image);
-  }
-  else
-  {
-    gtk_tool_item_set_is_important((GtkToolItem *)b, TRUE);
-    gtk_tool_button_set_label_widget((GtkToolButton *)b, NULL);
-    gtk_tool_button_set_label((GtkToolButton *)b, label);
-  }
+  gtk_tool_item_set_is_important((GtkToolItem *)b, TRUE);
+  gtk_tool_button_set_label_widget((GtkToolButton *)b, NULL);
+  gtk_tool_button_set_label((GtkToolButton *)b, label);
   return (GtkWidget *)b;
 }
 
@@ -923,7 +928,7 @@ void make_tools_toolbar(gui_t *self)
   p->select_btn = toolbar_button_new(NULL, 30, "Select");
   gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->select_btn, -1);
 
-  p->line_btn = toolbar_button_new("button_icon.svg", 30, NULL);
+  p->line_btn = toolbar_button_new("button_icon.svg", 30, "line");
   gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->line_btn, -1);
 
   p->arc_btn = toolbar_button_new(NULL, 30, "Arc");
