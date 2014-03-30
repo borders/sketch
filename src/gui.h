@@ -117,6 +117,10 @@ struct _gui {
 	double pan_start_xmax;
 	double pan_start_ymin;
 	double pan_start_ymax;
+
+	char dragging;
+	double drag_start_x;
+	double drag_start_y;
 };
 
 typedef struct _gui gui_t;

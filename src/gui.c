@@ -39,9 +39,21 @@ double px_to_user_x(gui_t *self, double x)
 }
 
 static inline
+double px_to_user_dx(gui_t *self, double dx)
+{
+  return dx / self->x_m;
+}
+
+static inline
 double px_to_user_y(gui_t *self, double y)
 {
   return (y - self->y_b) / self->y_m;
+}
+
+static inline
+double px_to_user_dy(gui_t *self, double dy)
+{
+  return dy / self->y_m;
 }
 
 static inline
@@ -225,6 +237,23 @@ selection_t get_object_at_location(double x_u, double y_u, double tol_u)
         printf("Unsupported shape type!\n");
     }
   }
+}
+
+static void start_drag(gui_t *gui, double x, double y)
+{
+  printf("starting drag\n");
+  gui->dragging = 1;
+  gui->drag_start_x = x;
+  gui->drag_start_y = y;
+  gui->state.end_x = x;
+  gui->state.end_y = y;
+}
+
+static void end_drag(gui_t *gui)
+{
+  printf("ending drag\n");
+  gui->dragging = 0;
+  gtk_widget_queue_draw(gui->canvas);
 }
 
 static void start_pan(gui_t *gui, double x, double y)
@@ -432,6 +461,7 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
                 selection_set(gui, &sel);
               }
             }
+            start_drag(gui, event->x, event->y);
             gtk_widget_queue_draw(gui->canvas);
             break;
           }
@@ -453,6 +483,37 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
     {
       if(gui->panning) 
         end_pan(gui);
+    }
+    else if(event->button == 1) 
+    {
+      if(gui->dragging) 
+      {
+        double dx_px = event->x - gui->drag_start_x;
+        double dy_px = event->y - gui->drag_start_y;
+        printf("dx_px=%g, dy_px=%g\n", dx_px, dy_px);
+        double dx_user = px_to_user_dx(gui, dx_px);
+        double dy_user = px_to_user_dy(gui, dy_px);
+        printf("dx_user=%g, dy_user=%g\n", dx_user, dy_user);
+        int i;
+        for(i=0; i < gui->state.selection_count; i++)
+        {
+          if(gui->state.selections[i].type == SELECT_TYPE_POINT)
+          {
+            sketch_point_t *p = (sketch_point_t *)(gui->state.selections[i].object);
+            p->x += dx_user;
+            p->y += dy_user;
+          }
+          else if(gui->state.selections[i].type == SELECT_TYPE_LINE)
+          {
+            sketch_line_t *l = (sketch_line_t *)(gui->state.selections[i].object);
+            l->v1->x += dx_user;
+            l->v1->y += dy_user;
+            l->v2->x += dx_user;
+            l->v2->y += dy_user;
+          }
+        }
+        end_drag(gui);
+      }
     }
     break;
   default:
@@ -571,11 +632,35 @@ gboolean mouse_motion_cb(GtkWidget *widget, GdkEventMotion *event, gpointer data
   } 
   else if(gui->state.active_tool == TOOL_NONE) 
   {
-    if( highlight_sketch_objects(px_to_user_x(gui, event->x), 
-          px_to_user_y(gui, event->y), 5.0/fabs(gui->x_m) ) ) 
+    if(event->state & GDK_BUTTON1_MASK)
     {
-      //printf("redrawing due to highlight state change\n");
-      gtk_widget_queue_draw(gui->canvas);
+      if(gui->dragging)
+      {
+        //printf("dragging selection...\n");
+        #if 0
+        int i;
+        for(i=0; i < gui->state.selection_count; i++)
+        {
+          if(gui->state.selections[i].type == SELECT_TYPE_POINT)
+          {
+            printf("dragging point...\n");
+          }
+        }
+        #else
+        gui->state.end_x = event->x;
+        gui->state.end_y = event->y;
+        #endif
+        gtk_widget_queue_draw(gui->canvas);
+      }
+    }
+    else
+    {
+      if( highlight_sketch_objects(px_to_user_x(gui, event->x), 
+            px_to_user_y(gui, event->y), 5.0/fabs(gui->x_m) ) ) 
+      {
+        //printf("redrawing due to highlight state change\n");
+        gtk_widget_queue_draw(gui->canvas);
+      }
     }
   }
 
@@ -780,7 +865,18 @@ static void draw_sketch_point(sketch_base_t *obj, gui_t *gui)
     radius = 3.0;
   }
 
-  draw_circle_filled(dp, user_to_px_x(gui, pt->x), user_to_px_y(gui, pt->y), radius);
+  double x_offset_px = 0;
+  double y_offset_px = 0;
+  if(gui->dragging && obj->is_selected)
+  {
+    x_offset_px = gui->state.end_x - gui->drag_start_x;
+    y_offset_px = gui->state.end_y - gui->drag_start_y;
+  }
+
+  draw_circle_filled(dp, 
+      user_to_px_x(gui, pt->x) + x_offset_px, 
+      user_to_px_y(gui, pt->y) + y_offset_px, 
+      radius);
 }
 
 static void draw_sketch_line(sketch_base_t *obj, gui_t *gui)
@@ -796,9 +892,20 @@ static void draw_sketch_line(sketch_base_t *obj, gui_t *gui)
     draw_set_line_width(dp, 3);
   }
   sketch_line_t *line = (sketch_line_t *)obj;
+
+  double x_offset_px = 0;
+  double y_offset_px = 0;
+  if(gui->dragging && obj->is_selected)
+  {
+    x_offset_px = gui->state.end_x - gui->drag_start_x;
+    y_offset_px = gui->state.end_y - gui->drag_start_y;
+  }
+
   draw_line(dp, 
-      user_to_px_x(gui, line->v1->x), user_to_px_y(gui, line->v1->y),
-      user_to_px_x(gui, line->v2->x), user_to_px_y(gui, line->v2->y) );
+      user_to_px_x(gui, line->v1->x) + x_offset_px, 
+      user_to_px_y(gui, line->v1->y) + y_offset_px,
+      user_to_px_x(gui, line->v2->x) + x_offset_px, 
+      user_to_px_y(gui, line->v2->y) + y_offset_px);
 
   draw_sketch_point( (sketch_base_t *)line->v1, gui);
   draw_sketch_point( (sketch_base_t *)line->v2, gui);
