@@ -931,7 +931,7 @@ void make_tools_toolbar(gui_t *self)
   p->line_btn = toolbar_button_new("button_icon.svg", 30, "line");
   gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->line_btn, -1);
 
-  p->arc_btn = toolbar_button_new(NULL, 30, "Arc");
+  p->arc_btn = toolbar_button_new("dummy_filename.svg", 30, "Arc");
   gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->arc_btn, -1);
 
   gtk_box_pack_start(GTK_BOX(self->top_level_vbox), p->tb, FALSE, FALSE, 0);
