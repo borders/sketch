@@ -33,6 +33,15 @@ struct _tools_tb
   GtkWidget *arc_btn;
 };
 
+struct _constraint_tb 
+{
+  GtkWidget *tb;
+
+  GtkWidget *coinc_btn;
+  GtkWidget *horiz_btn;
+  GtkWidget *vert_btn;
+};
+
 struct _status_bar 
 {
   GtkWidget *hbox;
@@ -91,6 +100,7 @@ struct _gui {
 	GtkWidget *canvas;
 	struct _button_bar button_bar;
   struct _tools_tb tools_tb;
+  struct _constraint_tb constraint_tb;
 	struct _status_bar status_bar;
 	
 	struct _state state;

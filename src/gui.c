@@ -1105,6 +1105,23 @@ void make_tools_toolbar(gui_t *self)
   gtk_box_pack_start(GTK_BOX(self->top_level_vbox), p->tb, FALSE, FALSE, 0);
 }
 
+void make_constraint_toolbar(gui_t *self)
+{
+  struct _constraint_tb *p = &(self->constraint_tb);
+  p->tb = gtk_toolbar_new();
+
+  p->coinc_btn = toolbar_button_new(NULL, 30, "Coinc.");
+  gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->coinc_btn, -1);
+
+  p->horiz_btn = toolbar_button_new(NULL, 30, "--");
+  gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->horiz_btn, -1);
+
+  p->vert_btn = toolbar_button_new(NULL, 30, "|");
+  gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->vert_btn, -1);
+
+  gtk_box_pack_start(GTK_BOX(self->top_level_vbox), p->tb, FALSE, FALSE, 0);
+}
+
 int gui_init(gui_t *self, int *argc, char ***argv)
 {
   struct _button_bar *bb = &(self->button_bar);
@@ -1119,6 +1136,7 @@ int gui_init(gui_t *self, int *argc, char ***argv)
   gtk_container_add(GTK_CONTAINER (self->window), self->top_level_vbox);
 
   make_tools_toolbar(self);
+  make_constraint_toolbar(self);
 
   bb->hbox = gtk_hbox_new(FALSE, 1);
   gtk_box_pack_start(GTK_BOX(self->top_level_vbox), bb->hbox, FALSE, FALSE, 0);
