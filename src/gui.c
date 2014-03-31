@@ -11,6 +11,35 @@
 #include "main.h"
 #include "sketch_types.h"
 
+static int delete_sketch_object(sketch_base_t *object)
+{
+  int i;
+  for(i=0; i < app_data.sketch_count; i++)
+  {
+    if(app_data.sketch[i] == object)
+    {
+      int j;
+
+      switch(object->type)
+      {
+        case SHAPE_TYPE_LINE:
+          sketch_line_fini((sketch_line_t *)object);
+          sketch_line_free((sketch_line_t *)object);
+          break;
+        default:
+          printf("don't know how to delete this type of item!\n");
+      }
+
+      for(j=i+1; j < app_data.sketch_count; j++)
+        app_data.sketch[j-1] = app_data.sketch[j];
+      app_data.sketch_count--;
+      return 0;
+    }
+  }
+  return -1;
+}
+
+
 void gui_update_draw_scale(gui_t *self, 
                         double xmin, double xmax, 
                         double ymin, double ymax,
@@ -594,6 +623,14 @@ gboolean key_press_cb(GtkWidget *widget, GdkEventKey *event, gpointer data)
       gui->state.draw_active = 0;
       gtk_widget_queue_draw(gui->canvas);
     }
+    else if(gui->panning)
+    {
+      end_pan(gui);
+    }
+    else if(gui->dragging)
+    {
+      end_drag(gui);
+    }
   }
   else if(event->keyval == GDK_KEY_space)
   { // space bar
@@ -603,6 +640,30 @@ gboolean key_press_cb(GtkWidget *widget, GdkEventKey *event, gpointer data)
       gtk_widget_get_pointer(gui->canvas, &x_px, &y_px);
       start_pan(gui, x_px, y_px);
     }
+  }
+  else if(event->keyval == GDK_KEY_Delete)
+  {
+    //printf("got delete key press\n");
+    if(gui->state.active_tool == TOOL_NONE)
+    {
+      int i;
+      for(i=0; i < gui->state.selection_count; i++)
+      {
+        if(gui->state.selections[i].type == SELECT_TYPE_POINT ||
+           gui->state.selections[i].type == SELECT_TYPE_LINE)
+        {
+          printf("deleting selected sketch object...\n");
+          if(delete_sketch_object((sketch_base_t *)(gui->state.selections[i].object)))
+          {
+            printf("error deleting sketch object\n");
+          }
+          else 
+          {
+            gtk_widget_queue_draw(gui->canvas);
+          }
+        }
+      }
+    } 
   }
   else
   {
