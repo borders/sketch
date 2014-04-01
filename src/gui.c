@@ -1046,13 +1046,21 @@ static void state_init(struct _state *s)
   s->selection_count = 0;
 }
 
-static GtkWidget *toolbar_button_new(const char *image_path, int size, const char *label)
+static GtkWidget *toolbar_button_new(const char *image_path, int size, 
+    const char *label, int toggle, 
+    gboolean (*cb)(GtkWidget *, GdkEvent *, gpointer),
+    gpointer user_data)
 {
-  GtkToolItem *b = gtk_toggle_tool_button_new();
+  GtkToolItem *b;
+  if(toggle)
+    b = gtk_toggle_tool_button_new();
+  else
+    b = gtk_tool_button_new(NULL, label);
 
+  GdkPixbuf *pb = NULL;
   if(image_path != NULL)
   {
-    GdkPixbuf *pb = gdk_pixbuf_new_from_file(image_path, NULL);
+    pb = gdk_pixbuf_new_from_file(image_path, NULL);
     if(pb != NULL)
     {
       gint pbw = gdk_pixbuf_get_width(pb);
@@ -1082,10 +1090,24 @@ static GtkWidget *toolbar_button_new(const char *image_path, int size, const cha
     }
   }
 
-  gtk_tool_item_set_is_important((GtkToolItem *)b, TRUE);
-  gtk_tool_button_set_label_widget((GtkToolButton *)b, NULL);
-  gtk_tool_button_set_label((GtkToolButton *)b, label);
+  if(pb == NULL)
+  {
+    gtk_tool_item_set_is_important((GtkToolItem *)b, TRUE);
+    gtk_tool_button_set_label_widget((GtkToolButton *)b, NULL);
+    gtk_tool_button_set_label((GtkToolButton *)b, label);
+  }
+
+  if(cb != NULL)
+  {
+    g_signal_connect((GtkWidget *)b, toggle ? "toggled" : "clicked", G_CALLBACK(cb), user_data);
+  }
   return (GtkWidget *)b;
+}
+
+gboolean tools_cb(GtkWidget *w, GdkEvent *e, gpointer data)
+{
+  printf("in tools callback!\n");
+  return TRUE;
 }
 
 void make_tools_toolbar(gui_t *self)
@@ -1093,16 +1115,22 @@ void make_tools_toolbar(gui_t *self)
   struct _tools_tb *p = &(self->tools_tb);
   p->tb = gtk_toolbar_new();
 
-  p->select_btn = toolbar_button_new(NULL, 30, "Select");
+  p->select_btn = toolbar_button_new(NULL, 30, "Select", 1, tools_cb, self);
   gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->select_btn, -1);
 
-  p->line_btn = toolbar_button_new("button_icon.svg", 30, "line");
+  p->line_btn = toolbar_button_new("button_icon.svg", 30, "line", 1, NULL, NULL);
   gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->line_btn, -1);
 
-  p->arc_btn = toolbar_button_new("dummy_filename.svg", 30, "Arc");
+  p->arc_btn = toolbar_button_new("dummy_filename.svg", 30, "Arc", 1, NULL, NULL);
   gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->arc_btn, -1);
 
   gtk_box_pack_start(GTK_BOX(self->top_level_vbox), p->tb, FALSE, FALSE, 0);
+}
+
+gboolean constraint_cb(GtkWidget *w, GdkEvent *e, gpointer data)
+{
+  printf("in constraint callback!\n");
+  return TRUE;
 }
 
 void make_constraint_toolbar(gui_t *self)
@@ -1110,13 +1138,13 @@ void make_constraint_toolbar(gui_t *self)
   struct _constraint_tb *p = &(self->constraint_tb);
   p->tb = gtk_toolbar_new();
 
-  p->coinc_btn = toolbar_button_new(NULL, 30, "Coinc.");
+  p->coinc_btn = toolbar_button_new(NULL, 30, "Coinc.", 0, constraint_cb, self);
   gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->coinc_btn, -1);
 
-  p->horiz_btn = toolbar_button_new(NULL, 30, "--");
+  p->horiz_btn = toolbar_button_new(NULL, 30, "--", 0, NULL, NULL);
   gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->horiz_btn, -1);
 
-  p->vert_btn = toolbar_button_new(NULL, 30, "|");
+  p->vert_btn = toolbar_button_new(NULL, 30, "|", 0, NULL, NULL);
   gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->vert_btn, -1);
 
   gtk_box_pack_start(GTK_BOX(self->top_level_vbox), p->tb, FALSE, FALSE, 0);
