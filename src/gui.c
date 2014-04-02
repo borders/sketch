@@ -1048,7 +1048,7 @@ static void state_init(struct _state *s)
 
 static GtkWidget *toolbar_button_new(const char *image_path, int size, 
     const char *label, int toggle, 
-    gboolean (*cb)(GtkWidget *, GdkEvent *, gpointer),
+    gboolean (*cb)(GtkWidget *, gpointer),
     gpointer user_data)
 {
   GtkToolItem *b;
@@ -1081,7 +1081,6 @@ static GtkWidget *toolbar_button_new(const char *image_path, int size,
       GtkWidget *button_image = gtk_image_new_from_pixbuf(pb2);
       assert(button_image);
       gtk_tool_button_set_icon_widget((GtkToolButton *)b, button_image);
-      return (GtkWidget *)b;
     }
     else
     {
@@ -1104,7 +1103,7 @@ static GtkWidget *toolbar_button_new(const char *image_path, int size,
   return (GtkWidget *)b;
 }
 
-gboolean tools_cb(GtkWidget *w, GdkEvent *e, gpointer data)
+gboolean tools_cb(GtkWidget *w, gpointer data)
 {
   printf("in tools callback!\n");
   return TRUE;
@@ -1118,18 +1117,39 @@ void make_tools_toolbar(gui_t *self)
   p->select_btn = toolbar_button_new(NULL, 30, "Select", 1, tools_cb, self);
   gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->select_btn, -1);
 
-  p->line_btn = toolbar_button_new("button_icon.svg", 30, "line", 1, NULL, NULL);
+  p->line_btn = toolbar_button_new("button_icon.svg", 30, "line", 1, tools_cb, self);
   gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->line_btn, -1);
 
-  p->arc_btn = toolbar_button_new("dummy_filename.svg", 30, "Arc", 1, NULL, NULL);
+  p->arc_btn = toolbar_button_new("dummy_filename.svg", 30, "Arc", 1, tools_cb, self);
   gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->arc_btn, -1);
 
   gtk_box_pack_start(GTK_BOX(self->top_level_vbox), p->tb, FALSE, FALSE, 0);
 }
 
-gboolean constraint_cb(GtkWidget *w, GdkEvent *e, gpointer data)
+gboolean constraint_cb(GtkWidget *w, gpointer data)
 {
+  gui_t  *gui = (gui_t *)data;
   printf("in constraint callback!\n");
+  if(w == gui->constraint_tb.coinc_btn)
+  {
+    printf("coinc btn\n");
+    if(gui->state.selection_count != 2)
+    {
+      printf("coincident constraint requires to objects selected\n");
+    }
+  }
+  else if(w == gui->constraint_tb.horiz_btn)
+  {
+    printf("horiz btn\n");
+  }
+  else if(w == gui->constraint_tb.vert_btn)
+  {
+    printf("vert btn\n");
+  }
+  else
+  {
+    printf("unknown btn\n");
+  }
   return TRUE;
 }
 
@@ -1141,10 +1161,10 @@ void make_constraint_toolbar(gui_t *self)
   p->coinc_btn = toolbar_button_new(NULL, 30, "Coinc.", 0, constraint_cb, self);
   gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->coinc_btn, -1);
 
-  p->horiz_btn = toolbar_button_new(NULL, 30, "--", 0, NULL, NULL);
+  p->horiz_btn = toolbar_button_new(NULL, 30, "--", 0, constraint_cb, self);
   gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->horiz_btn, -1);
 
-  p->vert_btn = toolbar_button_new(NULL, 30, "|", 0, NULL, NULL);
+  p->vert_btn = toolbar_button_new(NULL, 30, "|", 0, constraint_cb, self);
   gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->vert_btn, -1);
 
   gtk_box_pack_start(GTK_BOX(self->top_level_vbox), p->tb, FALSE, FALSE, 0);
