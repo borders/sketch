@@ -9,6 +9,7 @@
 
 #include "gui.h"
 #include "main.h"
+#include "solver.h"
 #include "sketch_types.h"
 
 static int delete_sketch_object(sketch_base_t *object)
@@ -1135,7 +1136,34 @@ gboolean constraint_cb(GtkWidget *w, gpointer data)
     printf("coinc btn\n");
     if(gui->state.selection_count != 2)
     {
-      printf("coincident constraint requires to objects selected\n");
+      printf("coincident constraint requires 2 objects selected\n");
+      return TRUE;
+    }
+    if(gui->state.selections[0].type == SELECT_TYPE_POINT &&
+       gui->state.selections[1].type == SELECT_TYPE_POINT)
+    {
+      constraint_t *c = constraint_alloc();
+      assert(c != NULL);
+      constraint_init_p_p_coinc(c,
+          (sketch_point_t *)(gui->state.selections[0].object),
+          (sketch_point_t *)(gui->state.selections[1].object) );
+      app_data.constraints[app_data.constraint_count++] = c;
+
+      solver_t *solver;
+      solver = solver_alloc();
+      solver_init(solver, app_data.constraints, app_data.constraint_count);
+      solver_set_iterate_cb(solver, NULL, (void*)solver);
+      solver_solve(solver);
+
+      solver_fini(solver);
+      solver_free(solver);
+      
+      gtk_widget_queue_draw(gui->canvas);
+    }
+    else
+    {
+      printf("unsupported object types for coincident constraint\n");
+      return TRUE;
     }
   }
   else if(w == gui->constraint_tb.horiz_btn)
