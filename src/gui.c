@@ -1169,10 +1169,80 @@ gboolean constraint_cb(GtkWidget *w, gpointer data)
   else if(w == gui->constraint_tb.horiz_btn)
   {
     printf("horiz btn\n");
+    int i;
+    int all_lines = 1;
+    for(i=0; i < gui->state.selection_count; i++)
+    {
+      if(gui->state.selections[i].type != SELECT_TYPE_LINE)
+      {
+        all_lines = 0;
+        break;
+      }
+    }
+    if(!all_lines)
+    {
+      printf("horizontal constraint requires only lines selected\n");
+      return TRUE;
+    }
+    for(i=0; i < gui->state.selection_count; i++)
+    {
+      constraint_t *c = constraint_alloc();
+      assert(c != NULL);
+      constraint_init_line_horiz(c,
+          (sketch_line_t *)(gui->state.selections[i].object) );
+      app_data.constraints[app_data.constraint_count++] = c;
+    }
+
+    solver_t *solver;
+    solver = solver_alloc();
+    solver_init(solver, app_data.constraints, app_data.constraint_count);
+    solver_set_iterate_cb(solver, NULL, (void*)solver);
+    solver_solve(solver);
+
+    solver_fini(solver);
+    solver_free(solver);
+    
+    gtk_widget_queue_draw(gui->canvas);
+
   }
   else if(w == gui->constraint_tb.vert_btn)
   {
     printf("vert btn\n");
+    int i;
+    int all_lines = 1;
+    for(i=0; i < gui->state.selection_count; i++)
+    {
+      if(gui->state.selections[i].type != SELECT_TYPE_LINE)
+      {
+        all_lines = 0;
+        break;
+      }
+    }
+    if(!all_lines)
+    {
+      printf("vertical constraint requires only lines selected\n");
+      return TRUE;
+    }
+    for(i=0; i < gui->state.selection_count; i++)
+    {
+      constraint_t *c = constraint_alloc();
+      assert(c != NULL);
+      constraint_init_line_vert(c,
+          (sketch_line_t *)(gui->state.selections[i].object) );
+      app_data.constraints[app_data.constraint_count++] = c;
+    }
+
+    solver_t *solver;
+    solver = solver_alloc();
+    solver_init(solver, app_data.constraints, app_data.constraint_count);
+    solver_set_iterate_cb(solver, NULL, (void*)solver);
+    solver_solve(solver);
+
+    solver_fini(solver);
+    solver_free(solver);
+    
+    gtk_widget_queue_draw(gui->canvas);
+
   }
   else
   {
