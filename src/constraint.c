@@ -84,6 +84,11 @@ static double cost_p_p_dist(constraint_t *self)
 	return (err*err);
 }
 
+static double cost_l_l_parallel(constraint_t *self)
+{
+	return (0.0);
+}
+
 static double cost_l_l_angle(constraint_t *self)
 {
 	/*
@@ -131,6 +136,9 @@ int constraint_init(constraint_t *self, constraint_type_t type)
 			break;
 		case CT_LINE_LINE_ANGLE:
 			self->cost = &cost_l_l_angle;
+			break;
+		case CT_LINE_LINE_PARALLEL:
+			self->cost = &cost_l_l_parallel;
 			break;
 		default:
 			self->cost = &cost_dummy;
