@@ -1267,6 +1267,33 @@ gboolean constraint_cb(GtkWidget *w, gpointer data)
     update_constraints();
     gtk_widget_queue_draw(gui->canvas);
   }
+  else if(w == gui->constraint_tb.parallel_btn)
+  {
+    printf("parallel btn\n");
+    if(gui->state.selection_count != 2)
+    {
+      printf("parallel constraint requires 2 objects selected\n");
+      return TRUE;
+    }
+    if(gui->state.selections[0].type == SELECT_TYPE_LINE &&
+       gui->state.selections[1].type == SELECT_TYPE_LINE)
+    {
+      constraint_t *c = constraint_alloc();
+      assert(c != NULL);
+      constraint_init_l_l_parallel(c,
+          (sketch_line_t *)(gui->state.selections[0].object),
+          (sketch_line_t *)(gui->state.selections[1].object) );
+
+      add_constraint(c);
+      update_constraints();
+      gtk_widget_queue_draw(gui->canvas);
+    }
+    else
+    {
+      printf("unsupported object types for parallel constraint\n");
+      return TRUE;
+    }
+  }
   else
   {
     printf("unknown btn\n");

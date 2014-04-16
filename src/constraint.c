@@ -84,9 +84,25 @@ static double cost_p_p_dist(constraint_t *self)
 	return (err*err);
 }
 
+static double line_to_theta(sketch_line_t *line)
+{
+  double dx = line->v2->x - line->v1->x;
+  double dy = line->v2->y - line->v1->y;
+  double theta = atan2(dy, dx);
+  return theta;
+}
+
 static double cost_l_l_parallel(constraint_t *self)
 {
-	return (0.0);
+	double q1, q2;
+  q1 = line_to_theta(self->line1);
+  if(q1 < 0.0)
+    q1 = M_PI + q1;
+  q2 = line_to_theta(self->line2);
+  if(q2 < 0.0)
+    q2 = M_PI + q2;
+  double err = q2 - q1;
+	return (err*err);
 }
 
 static double cost_l_l_angle(constraint_t *self)
@@ -190,6 +206,16 @@ int constraint_init_line_vert(constraint_t *self, sketch_line_t *line)
 	if (ret != 0)
 		return ret;
 	self->line1 = line;
+	return 0;
+}
+
+int constraint_init_l_l_parallel(constraint_t *self, sketch_line_t *l1, sketch_line_t *l2)
+{
+	int ret = constraint_init(self, CT_LINE_LINE_PARALLEL);
+	if (ret != 0)
+		return ret;
+	self->line1 = l1;
+	self->line2 = l2;
 	return 0;
 }
 
