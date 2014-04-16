@@ -11,8 +11,14 @@ sketch_line_t *lines[3];
 
 app_data_t app_data = 
 {
-  {0}, 0,
-  {0}, 0
+  .sketch = {0}, 
+  .sketch_count = 0,
+
+  .constraints = {0}, 
+  .constraint_count = 0,
+  .constraints_dirty = 1,
+
+  .solver = NULL
 };
 
 int iterate_cb(int i, void *data)
@@ -98,13 +104,11 @@ int main(void)
 
   solver_t *solver;
   solver = solver_alloc();
-  printf("here 8\n");
   solver_init(solver, constraints, 4);
-  printf("here 9\n");
   solver_set_iterate_cb(solver, &iterate_cb, (void*)solver);
-  printf("here 10\n");
-
   solver_solve(solver);
+
+  app_data.solver = solver_alloc();
 
   gui_t gui;
   gui_init(&gui, NULL, NULL);

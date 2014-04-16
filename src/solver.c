@@ -108,8 +108,6 @@ int solver_init(solver_t *self, constraint_t *c[], int c_count)
 {
 	int i;
 
-	printf("here _1\n");
-
 	// store references to constraints
 	self->c = c;
 	self->c_count = c_count;
@@ -117,7 +115,6 @@ int solver_init(solver_t *self, constraint_t *c[], int c_count)
 	// initialize the parm_map, which will determine the size of the solver
 	parm_map_init(self->map, (const constraint_t **)c, c_count);
 
-	printf("here _2\n");
 	self->size = self->map->size;
 
 #if FDF
@@ -151,22 +148,16 @@ int solver_init(solver_t *self, constraint_t *c[], int c_count)
 	self->func.fdf = fdf_eval;
 #endif
 
-	printf("here _3\n");
-
 #if FDF
 	gsl_multimin_fdfminimizer_set(self->s, &(self->func), self->x, 0.01, 1e-4);
 #else
-	printf("here _4\n");
 	gsl_vector *step = gsl_vector_alloc(self->size);
 	assert(step);
 
-	printf("here _5\n");
 	for(i=0; i < self->size; i++) {
 		gsl_vector_set(step, i, 0.01);
 	}
-	printf("here _6\n");
 	gsl_multimin_fminimizer_set(self->s, &(self->func), self->x, step);
-	printf("here _7\n");
 	gsl_vector_free(step);
 #endif
 

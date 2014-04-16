@@ -12,6 +12,10 @@
 #include "solver.h"
 #include "sketch_types.h"
 
+// private function prototypes
+static void add_constraint(constraint_t *c);
+static void update_constraints(void);
+
 static int delete_sketch_object(sketch_base_t *object)
 {
   int i;
@@ -283,6 +287,7 @@ static void end_drag(gui_t *gui)
 {
   printf("ending drag\n");
   gui->dragging = 0;
+  //update_constraints();
   gtk_widget_queue_draw(gui->canvas);
 }
 
@@ -641,6 +646,19 @@ gboolean key_press_cb(GtkWidget *widget, GdkEventKey *event, gpointer data)
       gtk_widget_get_pointer(gui->canvas, &x_px, &y_px);
       start_pan(gui, x_px, y_px);
     }
+  }
+  else if(event->keyval == 'u')
+  {
+    printf("updating constraints\n");
+    update_constraints();
+    gtk_widget_queue_draw(gui->canvas);
+  }
+  else if(event->keyval == 'U')
+  {
+    printf("updating constraints (with re-init)\n");
+    app_data.constraints_dirty = 1;
+    update_constraints();
+    gtk_widget_queue_draw(gui->canvas);
   }
   else if(event->keyval == GDK_KEY_Delete)
   {
@@ -1127,10 +1145,40 @@ void make_tools_toolbar(gui_t *self)
   gtk_box_pack_start(GTK_BOX(self->top_level_vbox), p->tb, FALSE, FALSE, 0);
 }
 
+static void add_constraint(constraint_t *c)
+{
+  app_data.constraints[app_data.constraint_count++] = c;
+  app_data.constraints_dirty = 1;
+}
+
+static void update_constraints(void)
+{
+  if(app_data.constraint_count < 1)
+    return;
+
+  if(app_data.constraints_dirty)
+  {
+    solver_fini(app_data.solver);
+    solver_init(app_data.solver, app_data.constraints, 
+        app_data.constraint_count);
+    solver_set_iterate_cb(app_data.solver, NULL, (void*)(app_data.solver));
+    app_data.constraints_dirty = 0;
+  }
+  solver_solve(app_data.solver);
+}
+
 gboolean constraint_cb(GtkWidget *w, gpointer data)
 {
   gui_t  *gui = (gui_t *)data;
   printf("in constraint callback!\n");
+
+  // don't bother if nothing's selected
+  if(gui->state.selection_count == 0)
+  {
+    printf("no objects selected!\n");
+    return TRUE;
+  }
+
   if(w == gui->constraint_tb.coinc_btn)
   {
     printf("coinc btn\n");
@@ -1147,17 +1195,9 @@ gboolean constraint_cb(GtkWidget *w, gpointer data)
       constraint_init_p_p_coinc(c,
           (sketch_point_t *)(gui->state.selections[0].object),
           (sketch_point_t *)(gui->state.selections[1].object) );
-      app_data.constraints[app_data.constraint_count++] = c;
 
-      solver_t *solver;
-      solver = solver_alloc();
-      solver_init(solver, app_data.constraints, app_data.constraint_count);
-      solver_set_iterate_cb(solver, NULL, (void*)solver);
-      solver_solve(solver);
-
-      solver_fini(solver);
-      solver_free(solver);
-      
+      add_constraint(c);
+      update_constraints();
       gtk_widget_queue_draw(gui->canvas);
     }
     else
@@ -1190,18 +1230,10 @@ gboolean constraint_cb(GtkWidget *w, gpointer data)
       assert(c != NULL);
       constraint_init_line_horiz(c,
           (sketch_line_t *)(gui->state.selections[i].object) );
-      app_data.constraints[app_data.constraint_count++] = c;
+      add_constraint(c);
     }
 
-    solver_t *solver;
-    solver = solver_alloc();
-    solver_init(solver, app_data.constraints, app_data.constraint_count);
-    solver_set_iterate_cb(solver, NULL, (void*)solver);
-    solver_solve(solver);
-
-    solver_fini(solver);
-    solver_free(solver);
-    
+    update_constraints();
     gtk_widget_queue_draw(gui->canvas);
 
   }
@@ -1229,20 +1261,11 @@ gboolean constraint_cb(GtkWidget *w, gpointer data)
       assert(c != NULL);
       constraint_init_line_vert(c,
           (sketch_line_t *)(gui->state.selections[i].object) );
-      app_data.constraints[app_data.constraint_count++] = c;
+      add_constraint(c);
     }
 
-    solver_t *solver;
-    solver = solver_alloc();
-    solver_init(solver, app_data.constraints, app_data.constraint_count);
-    solver_set_iterate_cb(solver, NULL, (void*)solver);
-    solver_solve(solver);
-
-    solver_fini(solver);
-    solver_free(solver);
-    
+    update_constraints();
     gtk_widget_queue_draw(gui->canvas);
-
   }
   else
   {
@@ -1264,6 +1287,12 @@ void make_constraint_toolbar(gui_t *self)
 
   p->vert_btn = toolbar_button_new(NULL, 30, "|", 0, constraint_cb, self);
   gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->vert_btn, -1);
+
+  p->parallel_btn = toolbar_button_new(NULL, 30, "//", 0, constraint_cb, self);
+  gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->parallel_btn, -1);
+
+  p->perp_btn = toolbar_button_new(NULL, 30, "-|", 0, constraint_cb, self);
+  gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->perp_btn, -1);
 
   gtk_box_pack_start(GTK_BOX(self->top_level_vbox), p->tb, FALSE, FALSE, 0);
 }

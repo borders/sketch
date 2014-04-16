@@ -3,6 +3,7 @@
 
 #include "constraint.h"
 #include "sketch_types.h"
+#include "solver.h"
 
 #define MAX_NUM_SHAPES 100
 #define MAX_NUM_CONSTRAINTS 100
@@ -14,6 +15,9 @@ typedef struct
 
 	constraint_t *constraints[MAX_NUM_CONSTRAINTS];
 	int constraint_count;
+	int constraints_dirty;
+
+  solver_t *solver;
 } app_data_t;
 
 extern app_data_t app_data;

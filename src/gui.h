@@ -40,6 +40,8 @@ struct _constraint_tb
   GtkWidget *coinc_btn;
   GtkWidget *horiz_btn;
   GtkWidget *vert_btn;
+  GtkWidget *parallel_btn;
+  GtkWidget *perp_btn;
 };
 
 struct _status_bar 
