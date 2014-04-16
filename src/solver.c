@@ -295,6 +295,16 @@ int parm_map_init(parm_map_t *self, const constraint_t *c[], int c_count)
 			map_add(self, &(c[i]->point1->y) );
 			map_add(self, &(c[i]->point2->y) );
 			break;
+		case CT_LINE_LINE_PARALLEL:
+			map_add(self, &(c[i]->line1->v1->x) );
+			map_add(self, &(c[i]->line1->v1->y) );
+			map_add(self, &(c[i]->line1->v2->x) );
+			map_add(self, &(c[i]->line1->v2->y) );
+			map_add(self, &(c[i]->line2->v1->x) );
+			map_add(self, &(c[i]->line2->v1->y) );
+			map_add(self, &(c[i]->line2->v2->x) );
+			map_add(self, &(c[i]->line2->v2->y) );
+			break;
 		default:
 			ERROR("Constraint type not yet supported");
 		}
