@@ -104,6 +104,23 @@ int solver_solve(solver_t *self)
 	return 0;
 }
 
+int solver_set_initial(solver_t *self)
+{
+  int i;
+
+	// make the vector that will hold the initial parameter values
+	for(i=0; i < self->size; i++) {
+		gsl_vector_set(self->x_0, i, *(self->map->values[i]) );
+	}
+	
+	// fill x vector with initial values
+	for(i=0; i < self->size; i++) {
+		gsl_vector_set(self->x, i, gsl_vector_get(self->x_0, i));
+	}
+
+  return 0;
+}
+
 int solver_init(solver_t *self, constraint_t *c[], int c_count)
 {
 	int i;
@@ -129,6 +146,7 @@ int solver_init(solver_t *self, constraint_t *c[], int c_count)
 	self->x = gsl_vector_alloc(self->size);
 	self->x_0 = gsl_vector_alloc(self->size);
 
+  //solver_set_initial(self);
 	// make the vector that will hold the initial parameter values
 	for(i=0; i < self->size; i++) {
 		gsl_vector_set(self->x_0, i, *(self->map->values[i]) );

@@ -46,6 +46,7 @@ int solver_init(solver_t *self, constraint_t *c[], int c_count);
 int solver_fini(solver_t *self);
 void solver_free(solver_t *self);
 int solver_solve(solver_t *self);
+int solver_set_initial(solver_t *self);
 
 int solver_set_iterate_cb(solver_t *self, iterate_cb_t *cb, void *data);
 

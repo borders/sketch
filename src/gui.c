@@ -287,7 +287,8 @@ static void end_drag(gui_t *gui)
 {
   printf("ending drag\n");
   gui->dragging = 0;
-  //update_constraints();
+  app_data.constraints_dirty = 1;
+  update_constraints();
   gtk_widget_queue_draw(gui->canvas);
 }
 
@@ -1164,6 +1165,7 @@ static void update_constraints(void)
     solver_set_iterate_cb(app_data.solver, NULL, (void*)(app_data.solver));
     app_data.constraints_dirty = 0;
   }
+  //solver_set_initial(app_data.solver);
   solver_solve(app_data.solver);
 }
 
