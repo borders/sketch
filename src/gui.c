@@ -497,7 +497,10 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
                 selection_set(gui, &sel);
               }
             }
-            start_drag(gui, event->x, event->y);
+            if(gui->state.selection_count > 0)
+            {
+              start_drag(gui, event->x, event->y);
+            }
             gtk_widget_queue_draw(gui->canvas);
             break;
           }
@@ -1293,6 +1296,33 @@ gboolean constraint_cb(GtkWidget *w, gpointer data)
     else
     {
       printf("unsupported object types for parallel constraint\n");
+      return TRUE;
+    }
+  }
+  else if(w == gui->constraint_tb.perp_btn)
+  {
+    printf("perp btn\n");
+    if(gui->state.selection_count != 2)
+    {
+      printf("perp constraint requires 2 objects selected\n");
+      return TRUE;
+    }
+    if(gui->state.selections[0].type == SELECT_TYPE_LINE &&
+       gui->state.selections[1].type == SELECT_TYPE_LINE)
+    {
+      constraint_t *c = constraint_alloc();
+      assert(c != NULL);
+      constraint_init_l_l_perp(c,
+          (sketch_line_t *)(gui->state.selections[0].object),
+          (sketch_line_t *)(gui->state.selections[1].object) );
+
+      add_constraint(c);
+      update_constraints();
+      gtk_widget_queue_draw(gui->canvas);
+    }
+    else
+    {
+      printf("unsupported object types for perp constraint\n");
       return TRUE;
     }
   }

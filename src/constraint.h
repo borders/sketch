@@ -92,5 +92,7 @@ int constraint_init_p_p_dist(constraint_t *self, sketch_point_t *p1,
     sketch_point_t *p2, double dist);
 int constraint_init_l_l_parallel(constraint_t *self, sketch_line_t *l1, 
     sketch_line_t *l2);
+int constraint_init_l_l_perp(constraint_t *self, sketch_line_t *l1, 
+    sketch_line_t *l2);
 
 #endif

@@ -92,6 +92,19 @@ static double line_to_theta(sketch_line_t *line)
   return theta;
 }
 
+static double cost_l_l_perp(constraint_t *self)
+{
+	double q1, q2;
+  q1 = line_to_theta(self->line1);
+  if(q1 < 0.0)
+    q1 = M_PI + q1;
+  q2 = line_to_theta(self->line2);
+  if(q2 < 0.0)
+    q2 = M_PI + q2;
+  double err = fabs(q2 - q1) - M_PI/2.0;
+	return (err*err);
+}
+
 static double cost_l_l_parallel(constraint_t *self)
 {
 	double q1, q2;
@@ -156,6 +169,9 @@ int constraint_init(constraint_t *self, constraint_type_t type)
 		case CT_LINE_LINE_PARALLEL:
 			self->cost = &cost_l_l_parallel;
 			break;
+		case CT_LINE_LINE_ORTHOG:
+			self->cost = &cost_l_l_perp;
+			break;
 		default:
 			self->cost = &cost_dummy;
 	}
@@ -212,6 +228,16 @@ int constraint_init_line_vert(constraint_t *self, sketch_line_t *line)
 int constraint_init_l_l_parallel(constraint_t *self, sketch_line_t *l1, sketch_line_t *l2)
 {
 	int ret = constraint_init(self, CT_LINE_LINE_PARALLEL);
+	if (ret != 0)
+		return ret;
+	self->line1 = l1;
+	self->line2 = l2;
+	return 0;
+}
+
+int constraint_init_l_l_perp(constraint_t *self, sketch_line_t *l1, sketch_line_t *l2)
+{
+	int ret = constraint_init(self, CT_LINE_LINE_ORTHOG);
 	if (ret != 0)
 		return ret;
 	self->line1 = l1;
