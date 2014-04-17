@@ -102,28 +102,49 @@ double user_to_px_y(gui_t *self, double y)
   return self->y_m * y + self->y_b;
 }
 
+static void set_active_tool(gui_t *gui, tool_t tool)
+{
+  switch(tool)
+  {
+    case TOOL_NONE:
+      gui->state.active_tool = tool;
+      gtk_label_set_text((GtkLabel *)(gui->status_bar.left_label), "tool: select");
+      break;
+    case TOOL_LINE:
+      gui->state.active_tool = tool;
+      gtk_label_set_text((GtkLabel *)(gui->status_bar.left_label), "tool: line");
+      break;
+    case TOOL_ARC:
+      gui->state.active_tool = tool;
+      gtk_label_set_text((GtkLabel *)(gui->status_bar.left_label), "tool: arc");
+      break;
+    default:
+      printf("invalid tool to activate impossible?\n");
+  }
+}
+
 static void select_cb(GtkButton *b, gpointer data)
 {
   gui_t *gui = (gui_t *)data;
-  printf("select button clicked!\n");
+  //printf("select button clicked!\n");
   gui->state.draw_active = false;
-  gui->state.active_tool = TOOL_NONE;
+  set_active_tool(gui, TOOL_NONE);
 }
 
 static void line_cb(GtkButton *b, gpointer data)
 {
   gui_t *gui = (gui_t *)data;
-  printf("line button clicked!\n");
+  //printf("line button clicked!\n");
   gui->state.draw_active = false;
-  gui->state.active_tool = TOOL_LINE;
+  set_active_tool(gui, TOOL_LINE);
 }
 
 static void arc_cb(GtkButton *b, gpointer data)
 {
   gui_t *gui = (gui_t *)data;
-  printf("arc button clicked!\n");
+  //printf("arc button clicked!\n");
   gui->state.draw_active = false;
-  gui->state.active_tool = TOOL_ARC;
+  set_active_tool(gui, TOOL_ARC);
 }
 
 static 
@@ -576,6 +597,7 @@ gboolean key_release_cb(GtkWidget *widget, GdkEventKey *event, gpointer data)
   }
   else
   {
+    /*
     printf("got key release: %c = 0x%02X (%d)\n", event->keyval, event->keyval, 
         event->state);
     if(event->state & GDK_SHIFT_MASK)
@@ -584,6 +606,7 @@ gboolean key_release_cb(GtkWidget *widget, GdkEventKey *event, gpointer data)
       printf(" control\n");
     if(event->state & GDK_META_MASK)
       printf(" meta\n");
+    */
   }
   return TRUE;
 }
@@ -640,6 +663,11 @@ gboolean key_press_cb(GtkWidget *widget, GdkEventKey *event, gpointer data)
     else if(gui->dragging)
     {
       end_drag(gui);
+    }
+    else if(gui->state.active_tool != TOOL_NONE)
+    {
+      printf("switching tool to select (due to Escape key)\n");
+      set_active_tool(gui, TOOL_NONE);
     }
   }
   else if(event->keyval == GDK_KEY_space)
@@ -1454,7 +1482,7 @@ int gui_init(gui_t *self, int *argc, char ***argv)
   /* Status Bar */
   sb->hbox = gtk_hbox_new(FALSE, 10);
   gtk_box_pack_start(GTK_BOX(self->top_level_vbox), sb->hbox, FALSE, FALSE, 0);
-  sb->left_label = gtk_label_new("Status...");
+  sb->left_label = gtk_label_new("tool: select");
   gtk_box_pack_start(GTK_BOX(sb->hbox), sb->left_label, FALSE, FALSE, 0);
   gtk_box_pack_start(GTK_BOX(sb->hbox), gtk_vseparator_new(), FALSE, FALSE, 0);
   sb->right_label = gtk_label_new("Hello World");
