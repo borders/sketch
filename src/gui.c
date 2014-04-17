@@ -1326,6 +1326,33 @@ gboolean constraint_cb(GtkWidget *w, gpointer data)
       return TRUE;
     }
   }
+  else if(w == gui->constraint_tb.equal_btn)
+  {
+    printf("equal btn\n");
+    if(gui->state.selection_count != 2)
+    {
+      printf("equal constraint requires 2 objects selected\n");
+      return TRUE;
+    }
+    if(gui->state.selections[0].type == SELECT_TYPE_LINE &&
+       gui->state.selections[1].type == SELECT_TYPE_LINE)
+    {
+      constraint_t *c = constraint_alloc();
+      assert(c != NULL);
+      constraint_init_l_l_equal(c,
+          (sketch_line_t *)(gui->state.selections[0].object),
+          (sketch_line_t *)(gui->state.selections[1].object) );
+
+      add_constraint(c);
+      update_constraints();
+      gtk_widget_queue_draw(gui->canvas);
+    }
+    else
+    {
+      printf("unsupported object types for line constraint\n");
+      return TRUE;
+    }
+  }
   else
   {
     printf("unknown btn\n");
@@ -1352,6 +1379,9 @@ void make_constraint_toolbar(gui_t *self)
 
   p->perp_btn = toolbar_button_new(NULL, 30, "-|", 0, constraint_cb, self);
   gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->perp_btn, -1);
+
+  p->equal_btn = toolbar_button_new(NULL, 30, "=", 0, constraint_cb, self);
+  gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->equal_btn, -1);
 
   gtk_box_pack_start(GTK_BOX(self->top_level_vbox), p->tb, FALSE, FALSE, 0);
 }

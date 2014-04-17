@@ -94,5 +94,7 @@ int constraint_init_l_l_parallel(constraint_t *self, sketch_line_t *l1,
     sketch_line_t *l2);
 int constraint_init_l_l_perp(constraint_t *self, sketch_line_t *l1, 
     sketch_line_t *l2);
+int constraint_init_l_l_equal(constraint_t *self, sketch_line_t *l1, 
+    sketch_line_t *l2);
 
 #endif
