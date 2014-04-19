@@ -134,6 +134,8 @@ struct _gui {
 	char dragging;
 	double drag_start_x;
 	double drag_start_y;
+
+  char draw_constraints;
 };
 
 typedef struct _gui gui_t;

@@ -679,6 +679,12 @@ gboolean key_press_cb(GtkWidget *widget, GdkEventKey *event, gpointer data)
       start_pan(gui, x_px, y_px);
     }
   }
+  else if(event->keyval == 'c')
+  {
+    printf("toggling draw_constraints\n");
+    gui->draw_constraints = !gui->draw_constraints;
+    gtk_widget_queue_draw(gui->canvas);
+  }
   else if(event->keyval == 'u')
   {
     printf("updating constraints\n");
@@ -1023,6 +1029,37 @@ static void draw_sketch_line(sketch_base_t *obj, gui_t *gui)
   draw_sketch_point( (sketch_base_t *)line->v2, gui);
 }
 
+void draw_equal_constraint(gui_t *gui, double x, double y)
+{
+  draw_ptr dp = gui->drawer;
+  draw_set_color(dp, 0.3, 0.3, 0.3);
+  double x_px = user_to_px_x(gui, x);
+  double y_px = user_to_px_y(gui, y);
+  draw_rectangle_filled(dp, x_px, y_px, x_px+15, y_px+15);
+}
+
+void draw_constraint(gui_t *gui, constraint_t *c)
+{
+  draw_ptr dp = gui->drawer;
+  switch(c->type)
+  {
+    case CT_LINE_LINE_EQUAL:
+      //printf("drawing equal constraint\n");
+      {
+        double xm, ym;
+        xm = 0.5 * (c->line1->v1->x + c->line1->v2->x);
+        ym = 0.5 * (c->line1->v1->y + c->line1->v2->y);
+        draw_equal_constraint(gui, xm, ym);
+        xm = 0.5 * (c->line2->v1->x + c->line2->v2->x);
+        ym = 0.5 * (c->line2->v1->y + c->line2->v2->y);
+        draw_equal_constraint(gui, xm, ym);
+      }
+      break;
+    default:
+      ;
+  }
+}
+
 gboolean draw_canvas(GtkWidget *widget, GdkEventExpose *event, gpointer data) 
 {
   gui_t *gui = (gui_t *)data;
@@ -1083,6 +1120,15 @@ gboolean draw_canvas(GtkWidget *widget, GdkEventExpose *event, gpointer data)
       }
       case SHAPE_TYPE_ARC:
         break;
+    }
+  }
+
+  // draw constraints (if desired)
+  if(gui->draw_constraints)
+  {
+    for(i=0; i < app_data.constraint_count; i++)
+    {
+      draw_constraint(gui, app_data.constraints[i]);
     }
   }
 
@@ -1492,13 +1538,15 @@ int gui_init(gui_t *self, int *argc, char ***argv)
   g_signal_connect(self->window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
   gtk_widget_show_all(self->window);
 
-  // for now, just set user coords equal to pixel coords
   self->xmin = -10;
   self->xmax = +10;
   self->ymin = -10;
   self->ymax = +10;
 
   self->panning = 0;
+  self->dragging = 0;
+
+  self->draw_constraints = 1;
 
   return 0;
 }

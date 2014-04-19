@@ -279,7 +279,7 @@ void parm_map_print(parm_map_t *self, FILE *fp, constraint_t *c[], int c_count)
 
 int parm_map_init(parm_map_t *self, const constraint_t *c[], int c_count)
 {
-	DEBUG2("init'ing parm_map...");
+	DEBUG2("init'ing parm_map (count=%d)...", c_count);
 	int i;
 	self->size = 0;
 	for(i=0; i < c_count; i++) {
@@ -314,6 +314,26 @@ int parm_map_init(parm_map_t *self, const constraint_t *c[], int c_count)
 			map_add(self, &(c[i]->point2->y) );
 			break;
 		case CT_LINE_LINE_PARALLEL:
+			map_add(self, &(c[i]->line1->v1->x) );
+			map_add(self, &(c[i]->line1->v1->y) );
+			map_add(self, &(c[i]->line1->v2->x) );
+			map_add(self, &(c[i]->line1->v2->y) );
+			map_add(self, &(c[i]->line2->v1->x) );
+			map_add(self, &(c[i]->line2->v1->y) );
+			map_add(self, &(c[i]->line2->v2->x) );
+			map_add(self, &(c[i]->line2->v2->y) );
+			break;
+		case CT_LINE_LINE_ORTHOG:
+			map_add(self, &(c[i]->line1->v1->x) );
+			map_add(self, &(c[i]->line1->v1->y) );
+			map_add(self, &(c[i]->line1->v2->x) );
+			map_add(self, &(c[i]->line1->v2->y) );
+			map_add(self, &(c[i]->line2->v1->x) );
+			map_add(self, &(c[i]->line2->v1->y) );
+			map_add(self, &(c[i]->line2->v2->x) );
+			map_add(self, &(c[i]->line2->v2->y) );
+			break;
+		case CT_LINE_LINE_EQUAL:
 			map_add(self, &(c[i]->line1->v1->x) );
 			map_add(self, &(c[i]->line1->v1->y) );
 			map_add(self, &(c[i]->line1->v2->x) );
