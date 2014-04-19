@@ -16,9 +16,47 @@
 static void add_constraint(constraint_t *c);
 static void update_constraints(void);
 
+static int delete_constraint(constraint_t *c)
+{
+  int i;
+  for(i = 0; i < app_data.constraint_count; i++)
+  {
+    if(c == app_data.constraints[i])
+    {
+      int j;
+      for(j = i+1; j < app_data.constraint_count; j++)
+      {
+        app_data.constraints[j-1] = app_data.constraints[j];
+      }
+      app_data.constraint_count--;
+    }
+  }
+  return 0;
+}
+
 static int delete_sketch_object(sketch_base_t *object)
 {
   int i;
+
+  // first, delete all constraints related to this object
+  for(i=0; i < app_data.constraint_count; i++)
+  {
+    constraint_t *c = app_data.constraints[i];
+    switch(object->type)
+    {
+      case SHAPE_TYPE_LINE:
+        if((sketch_base_t *)c->line1 == object || 
+            (sketch_base_t *)c->line2 == object)
+        {
+          delete_constraint(c);
+        }
+        break;
+      default:
+        printf("don't know how to delete constraints for this type of object!\n");
+    }
+  }
+
+  // then delete the sketch object itself
   for(i=0; i < app_data.sketch_count; i++)
   {
     if(app_data.sketch[i] == object)
@@ -32,7 +70,7 @@ static int delete_sketch_object(sketch_base_t *object)
           sketch_line_free((sketch_line_t *)object);
           break;
         default:
-          printf("don't know how to delete this type of item!\n");
+          printf("don't know how to delete this type of object!\n");
       }
 
       for(j=i+1; j < app_data.sketch_count; j++)
@@ -1029,13 +1067,21 @@ static void draw_sketch_line(sketch_base_t *obj, gui_t *gui)
   draw_sketch_point( (sketch_base_t *)line->v2, gui);
 }
 
+#define CSIZE (12.0)
+
 void draw_equal_constraint(gui_t *gui, double x, double y)
 {
   draw_ptr dp = gui->drawer;
-  draw_set_color(dp, 0.3, 0.3, 0.3);
+  draw_set_color(dp, 0.7, 0.7, 0.7);
   double x_px = user_to_px_x(gui, x);
   double y_px = user_to_px_y(gui, y);
-  draw_rectangle_filled(dp, x_px, y_px, x_px+15, y_px+15);
+  draw_rectangle_filled(dp, x_px, y_px, x_px+CSIZE , y_px+CSIZE );
+  draw_set_line_width(dp, 1);
+  draw_set_color(dp, 0, 0, 0);
+  draw_line(dp, x_px + 0.1*CSIZE, y_px + 0.33*CSIZE, 
+      x_px + 0.9*CSIZE, y_px + 0.33*CSIZE);
+  draw_line(dp, x_px + 0.1*CSIZE, y_px + 0.66*CSIZE, 
+      x_px + 0.9*CSIZE, y_px + 0.66*CSIZE);
 }
 
 void draw_constraint(gui_t *gui, constraint_t *c)
