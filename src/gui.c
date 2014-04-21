@@ -499,6 +499,23 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
             double end_xu, end_yu;
             end_xu = px_to_user_x(gui, end_xp);
             end_yu = px_to_user_y(gui, end_yp);
+
+            char horiz = 0;
+            if(event->state & GDK_SHIFT_MASK)
+            {
+              double dx = end_xu - gui->state.start_x;
+              double dy = end_yu - gui->state.start_y;
+              if(fabs(dx) > fabs(dy))
+              {
+                horiz = 1;
+                end_yu = gui->state.start_y;
+              }
+              else
+              {
+                end_xu = gui->state.start_x;
+              }
+            }
+
             printf("  px::   start: (%g,%g)  end: (%g,%g)\n", 
                 gui->state.start_x, gui->state.start_y,
                 end_xp, end_yp);
@@ -514,6 +531,19 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
             end.x = end_xu;
             end.y = end_yu;
             sketch_line_init(line, &start, &end);
+
+            if(event->state & GDK_SHIFT_MASK)
+            {
+              constraint_t *c = constraint_alloc();
+              assert(c != NULL);
+              if(horiz)
+                constraint_init_line_horiz(c, line);
+              else
+                constraint_init_line_vert(c, line);
+              add_constraint(c);
+              update_constraints();
+            }
+
             gui->state.draw_active = false;
             gtk_widget_queue_draw(gui->canvas);
             break;
@@ -784,6 +814,15 @@ gboolean mouse_motion_cb(GtkWidget *widget, GdkEventMotion *event, gpointer data
   {
     gui->state.end_x = event->x;
     gui->state.end_y = event->y;
+    if(event->state & GDK_SHIFT_MASK)
+    {
+      double dx = px_to_user_x(gui, event->x) - gui->state.start_x;
+      double dy = px_to_user_y(gui, event->y) - gui->state.start_y;
+      if(fabs(dx) > fabs(dy))
+        gui->state.end_y = user_to_px_y(gui, gui->state.start_y);
+      else
+        gui->state.end_x = user_to_px_x(gui, gui->state.start_x);
+    }
     gtk_widget_queue_draw(gui->canvas);
   } 
   else if(gui->state.active_tool == TOOL_NONE) 
@@ -792,20 +831,8 @@ gboolean mouse_motion_cb(GtkWidget *widget, GdkEventMotion *event, gpointer data
     {
       if(gui->dragging)
       {
-        //printf("dragging selection...\n");
-        #if 0
-        int i;
-        for(i=0; i < gui->state.selection_count; i++)
-        {
-          if(gui->state.selections[i].type == SELECT_TYPE_POINT)
-          {
-            printf("dragging point...\n");
-          }
-        }
-        #else
         gui->state.end_x = event->x;
         gui->state.end_y = event->y;
-        #endif
         gtk_widget_queue_draw(gui->canvas);
       }
     }
