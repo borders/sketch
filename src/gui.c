@@ -1035,7 +1035,7 @@ static void draw_sketch_point(sketch_base_t *obj, gui_t *gui)
   sketch_point_t *pt = (sketch_point_t *)obj;
   
   draw_set_color(dp, 0,0,1);
-  double radius = 2.0;
+  double radius = 1.0;
 
   if(obj->is_selected) 
   {
