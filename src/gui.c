@@ -891,6 +891,10 @@ gboolean mouse_motion_cb(GtkWidget *widget, GdkEventMotion *event, gpointer data
           sketch_line_t *line = (sketch_line_t *)(app_data.sketch[app_data.sketch_count-1]);
           line->v2->x = px_to_user_x(gui, gui->state.end_x);
           line->v2->y = px_to_user_y(gui, gui->state.end_y);
+
+          highlight_sketch_objects(px_to_user_x(gui, event->x), 
+            px_to_user_y(gui, event->y), 5.0/fabs(gui->x_m) );
+
         }
         break;
       default:
