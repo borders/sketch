@@ -516,6 +516,13 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
               }
             }
 
+            selection_t sel = 
+              get_object_at_location(end_xu, end_yu, 5.0 / fabs(gui->x_m) );
+            if(sel.type == SELECT_TYPE_POINT) 
+            {
+              end_xu = ((sketch_point_t *)(sel.object))->x;
+              end_yu = ((sketch_point_t *)(sel.object))->y;
+            }
             printf("  px::   start: (%g,%g)  end: (%g,%g)\n", 
                 gui->state.start_x, gui->state.start_y,
                 end_xp, end_yp);
@@ -540,6 +547,15 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
                 constraint_init_line_horiz(c, line);
               else
                 constraint_init_line_vert(c, line);
+              add_constraint(c);
+              update_constraints();
+            }
+
+            if(sel.type == SELECT_TYPE_POINT) 
+            {
+              constraint_t *c = constraint_alloc();
+              assert(c != NULL);
+              constraint_init_p_p_coinc(c, line->v2, (sketch_point_t *)(sel.object) );
               add_constraint(c);
               update_constraints();
             }
@@ -598,6 +614,22 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
             gui->state.draw_active = true;
             gui->state.start_x = px_to_user_x(gui, event->x);
             gui->state.start_y = px_to_user_y(gui, event->y);
+
+            selection_t sel = 
+              get_object_at_location(gui->state.start_x, gui->state.start_y, 
+                5.0 / fabs(gui->x_m) );
+            if(sel.type == SELECT_TYPE_POINT) 
+            {
+              gui->state.start_x = ((sketch_point_t *)(sel.object))->x;
+              gui->state.start_y = ((sketch_point_t *)(sel.object))->y;
+              // FIXME: Need to rethink this if I want to be able to start a line with a
+              // realtime constraint
+              //constraint_t *c = constraint_alloc();
+              //assert(c != NULL);
+              //constraint_init_p_p_coinc(c, line->v2, (sketch_point_t *)(sel.object) );
+              //add_constraint(c);
+              //update_constraints();
+            }
             break;
           default:  
             printf("Unsupported tool!\n");
