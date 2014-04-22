@@ -161,11 +161,31 @@ static void set_active_tool(gui_t *gui, tool_t tool)
   }
 }
 
+static void cancel_active_draw(gui_t *gui)
+{
+  if(!gui->state.draw_active)
+    return;
+
+  gui->state.draw_active = 0;
+  switch(gui->state.active_tool)
+  {
+    case TOOL_LINE:
+      {
+        sketch_line_t *line = (sketch_line_t *)app_data.sketch[--app_data.sketch_count];
+        sketch_line_fini(line);
+        sketch_line_free(line);
+      }
+      break;
+    default:
+      printf("don't know how to cancel active draw for this tool\n");
+  }
+}
+
 static void select_cb(GtkButton *b, gpointer data)
 {
   gui_t *gui = (gui_t *)data;
   //printf("select button clicked!\n");
-  gui->state.draw_active = false;
+  cancel_active_draw(gui);
   set_active_tool(gui, TOOL_NONE);
 }
 
@@ -173,7 +193,7 @@ static void line_cb(GtkButton *b, gpointer data)
 {
   gui_t *gui = (gui_t *)data;
   //printf("line button clicked!\n");
-  gui->state.draw_active = false;
+  cancel_active_draw(gui);
   set_active_tool(gui, TOOL_LINE);
 }
 
@@ -181,7 +201,7 @@ static void arc_cb(GtkButton *b, gpointer data)
 {
   gui_t *gui = (gui_t *)data;
   //printf("arc button clicked!\n");
-  gui->state.draw_active = false;
+  cancel_active_draw(gui);
   set_active_tool(gui, TOOL_ARC);
 }
 
@@ -530,14 +550,9 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
                 gui->state.start_x, gui->state.start_y,
                 end_xu, end_yu);
 
-            sketch_line_t *line = sketch_line_alloc();
-            app_data.sketch[app_data.sketch_count++] = (sketch_base_t *)line;
-            coord_2D_t start, end;
-            start.x = gui->state.start_x;
-            start.y = gui->state.start_y;
-            end.x = end_xu;
-            end.y = end_yu;
-            sketch_line_init(line, &start, &end);
+            sketch_line_t *line = (sketch_line_t *)app_data.sketch[app_data.sketch_count - 1];
+            line->v2->x = end_xu;
+            line->v2->y = end_yu;
 
             if(event->state & GDK_SHIFT_MASK)
             {
@@ -622,14 +637,27 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
             {
               gui->state.start_x = ((sketch_point_t *)(sel.object))->x;
               gui->state.start_y = ((sketch_point_t *)(sel.object))->y;
-              // FIXME: Need to rethink this if I want to be able to start a line with a
-              // realtime constraint
-              //constraint_t *c = constraint_alloc();
-              //assert(c != NULL);
-              //constraint_init_p_p_coinc(c, line->v2, (sketch_point_t *)(sel.object) );
-              //add_constraint(c);
-              //update_constraints();
             }
+
+            sketch_line_t *line = sketch_line_alloc();
+            app_data.sketch[app_data.sketch_count++] = (sketch_base_t *)line;
+
+            coord_2D_t start, end;
+            start.x = gui->state.start_x;
+            start.y = gui->state.start_y;
+            end.x = start.x;
+            end.y = start.y;
+            sketch_line_init(line, &start, &end);
+
+            if(sel.type == SELECT_TYPE_POINT) 
+            {
+              constraint_t *c = constraint_alloc();
+              assert(c != NULL);
+              constraint_init_p_p_coinc(c, line->v1, (sketch_point_t *)(sel.object) );
+              add_constraint(c);
+              update_constraints();
+            }
+
             break;
           default:  
             printf("Unsupported tool!\n");
@@ -753,7 +781,7 @@ gboolean key_press_cb(GtkWidget *widget, GdkEventKey *event, gpointer data)
   { // escape should cancel any active operation
     if(gui->state.draw_active)
     {
-      gui->state.draw_active = 0;
+      cancel_active_draw(gui);
       gtk_widget_queue_draw(gui->canvas);
     }
     else if(gui->panning)
@@ -855,6 +883,20 @@ gboolean mouse_motion_cb(GtkWidget *widget, GdkEventMotion *event, gpointer data
       else
         gui->state.end_x = user_to_px_x(gui, gui->state.start_x);
     }
+
+    switch(gui->state.active_tool)
+    {
+      case TOOL_LINE:
+        {
+          sketch_line_t *line = (sketch_line_t *)(app_data.sketch[app_data.sketch_count-1]);
+          line->v2->x = px_to_user_x(gui, gui->state.end_x);
+          line->v2->y = px_to_user_y(gui, gui->state.end_y);
+        }
+        break;
+      default:
+        printf("don't know what to do!\n");
+    }
+
     gtk_widget_queue_draw(gui->canvas);
   } 
   else if(gui->state.active_tool == TOOL_NONE) 
@@ -1337,6 +1379,7 @@ gboolean draw_canvas(GtkWidget *widget, GdkEventExpose *event, gpointer data)
   // draw the ruler
   draw_ruler(gui);
 
+#if 0
   // draw the active line/arc, if there is one
   if(gui->state.draw_active) 
   {
@@ -1351,6 +1394,7 @@ gboolean draw_canvas(GtkWidget *widget, GdkEventExpose *event, gpointer data)
         break;
     }
   }
+#endif
 
   // draw sketch objects
   for(i = 0; i < app_data.sketch_count; i++) 
