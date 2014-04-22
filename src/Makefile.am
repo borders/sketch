@@ -1,10 +1,10 @@
 
-bin_PROGRAMS=main
+bin_PROGRAMS=sketch
 
-main_LDADD   = -lm -lgsl -lgslcblas $(GTK2_LIBS)
-main_CFLAGS  = $(GTK2_CFLAGS)
+sketch_LDADD   = -lm -lgsl -lgslcblas $(GTK2_LIBS)
+sketch_CFLAGS  = $(GTK2_CFLAGS)
 
-main_SOURCES = main.c \
+sketch_SOURCES = main.c \
 	constraint.c \
 	sketch_types.c \
 	solver.c gui.c \
