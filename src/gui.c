@@ -1781,7 +1781,7 @@ int gui_init(gui_t *self, int *argc, char ***argv)
   self->top_level_vbox = gtk_vbox_new(FALSE, 1);
   gtk_container_add(GTK_CONTAINER (self->window), self->top_level_vbox);
 
-  make_tools_toolbar(self);
+  //make_tools_toolbar(self);
   make_constraint_toolbar(self);
 
   bb->hbox = gtk_hbox_new(FALSE, 1);
