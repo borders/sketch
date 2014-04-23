@@ -12,6 +12,7 @@ typedef enum
 {
   TOOL_NONE,
   TOOL_LINE,
+  TOOL_POLYLINE,
   TOOL_ARC
 } tool_t;
 
@@ -21,6 +22,7 @@ struct _button_bar
 
   GtkWidget *select_btn;
   GtkWidget *line_btn;
+  GtkWidget *polyline_btn;
   GtkWidget *arc_btn;
 };
 

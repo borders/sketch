@@ -36,9 +36,10 @@ static int delete_constraint(constraint_t *c)
   return 0;
 }
 
-static int delete_sketch_object(sketch_base_t *object)
+static int delete_sketch_object(gui_t *gui, sketch_base_t *object)
 {
   int i;
+  int found = 0;
 
   // first, delete all constraints related to this object
   for(i=0; i < app_data.constraint_count; i++)
@@ -78,10 +79,19 @@ static int delete_sketch_object(sketch_base_t *object)
       for(j=i+1; j < app_data.sketch_count; j++)
         app_data.sketch[j-1] = app_data.sketch[j];
       app_data.sketch_count--;
-      return 0;
+      found = 1;
+      break;
     }
   }
-  return -1;
+
+  // cleanup (ugly)
+  if((void *)gui->state.highlight_sel.object == (void *)object)
+  {
+    gui->state.highlight_sel.type = SELECT_TYPE_NONE;
+    gtk_widget_queue_draw(gui->canvas);
+  }
+
+  return found ? 0 : -1;
 }
 
 
@@ -154,6 +164,10 @@ static void set_active_tool(gui_t *gui, tool_t tool)
       gui->state.active_tool = tool;
       gtk_label_set_text((GtkLabel *)(gui->status_bar.left_label), "tool: line");
       break;
+    case TOOL_POLYLINE:
+      gui->state.active_tool = tool;
+      gtk_label_set_text((GtkLabel *)(gui->status_bar.left_label), "tool: ployline");
+      break;
     case TOOL_ARC:
       gui->state.active_tool = tool;
       gtk_label_set_text((GtkLabel *)(gui->status_bar.left_label), "tool: arc");
@@ -171,11 +185,12 @@ static void cancel_active_draw(gui_t *gui)
   gui->state.draw_active = 0;
   switch(gui->state.active_tool)
   {
+    case TOOL_POLYLINE:
     case TOOL_LINE:
       {
-        sketch_line_t *line = (sketch_line_t *)app_data.sketch[--app_data.sketch_count];
-        sketch_line_fini(line);
-        sketch_line_free(line);
+        sketch_line_t *line = 
+          (sketch_line_t *)app_data.sketch[app_data.sketch_count - 1];
+        delete_sketch_object(gui, (sketch_base_t *)line);
       }
       break;
     default:
@@ -197,6 +212,14 @@ static void line_cb(GtkButton *b, gpointer data)
   //printf("line button clicked!\n");
   cancel_active_draw(gui);
   set_active_tool(gui, TOOL_LINE);
+}
+
+static void polyline_cb(GtkButton *b, gpointer data)
+{
+  gui_t *gui = (gui_t *)data;
+  //printf("polyline button clicked!\n");
+  cancel_active_draw(gui);
+  set_active_tool(gui, TOOL_POLYLINE);
 }
 
 static void arc_cb(GtkButton *b, gpointer data)
@@ -465,6 +488,7 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
           case TOOL_NONE:
             printf("Shouldn't be here!\n");
             break;
+          case TOOL_POLYLINE: 
           case TOOL_LINE: 
           {
             double end_xp, end_yp;
@@ -529,7 +553,30 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
               update_constraints();
             }
 
-            gui->state.draw_active = false;
+            if(gui->state.active_tool == TOOL_POLYLINE)
+            {
+              sketch_line_t *next_line = sketch_line_alloc();
+              app_data.sketch[app_data.sketch_count++] = 
+                (sketch_base_t *)next_line;
+
+              coord_2D_t start, end;
+              start.x = end_xu;
+              start.y = end_yu;
+              end.x = start.x;
+              end.y = start.y;
+              sketch_line_init(next_line, &start, &end);
+
+              constraint_t *c = constraint_alloc();
+              assert(c != NULL);
+              constraint_init_p_p_coinc(c, line->v2, next_line->v1 );
+              add_constraint(c);
+              update_constraints();
+            }
+            else
+            {
+              gui->state.draw_active = false;
+            }
+
             gtk_widget_queue_draw(gui->canvas);
             break;
           }
@@ -571,6 +618,7 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
             gtk_widget_queue_draw(gui->canvas);
             break;
           }
+          case TOOL_POLYLINE: 
           case TOOL_LINE:
             // Start of a line
             gui->state.start_x = px_to_user_x(gui, event->x);
@@ -785,7 +833,7 @@ gboolean key_press_cb(GtkWidget *widget, GdkEventKey *event, gpointer data)
            gui->state.selections[i].type == SELECT_TYPE_LINE)
         {
           printf("deleting selected sketch object...\n");
-          if(delete_sketch_object((sketch_base_t *)(gui->state.selections[i].object)))
+          if(delete_sketch_object(gui, (sketch_base_t *)(gui->state.selections[i].object)))
           {
             printf("error deleting sketch object\n");
           }
@@ -828,7 +876,6 @@ gboolean mouse_motion_cb(GtkWidget *widget, GdkEventMotion *event, gpointer data
   if(gui->state.highlight_sel.type != gui->state.last_highlight_sel.type ||
       gui->state.highlight_sel.object != gui->state.last_highlight_sel.object)
   {
-    printf("redrawing due to change in highlight selection\n");
     gtk_widget_queue_draw(gui->canvas);
   }
 
@@ -848,6 +895,7 @@ gboolean mouse_motion_cb(GtkWidget *widget, GdkEventMotion *event, gpointer data
 
     switch(gui->state.active_tool)
     {
+      case TOOL_POLYLINE:
       case TOOL_LINE:
         {
           sketch_line_t *line = (sketch_line_t *)(app_data.sketch[app_data.sketch_count-1]);
@@ -1068,12 +1116,13 @@ static void draw_sketch_point(sketch_base_t *obj, gui_t *gui)
   if(obj->is_selected) 
   {
     draw_set_color(dp, 1,0,0);
-    radius = 4.0;
+    radius = 3.0;
   }
   else if(obj->is_highlighted) 
   {
     draw_set_color(dp, 0,1,0);
-    radius = radius * 2;
+    //radius = radius * 2;
+    radius = 3.0;
   }
 
   double x_offset_px = 0;
@@ -1748,6 +1797,11 @@ int gui_init(gui_t *self, int *argc, char ***argv)
   bb->line_btn = gtk_button_new_with_label("Line");
   gtk_box_pack_start(GTK_BOX(bb->hbox), bb->line_btn, FALSE, FALSE, 0);
   g_signal_connect(bb->line_btn, "clicked", G_CALLBACK(line_cb), self);
+
+  /* Polyline Button */
+  bb->polyline_btn = gtk_button_new_with_label("Polyline");
+  gtk_box_pack_start(GTK_BOX(bb->hbox), bb->polyline_btn, FALSE, FALSE, 0);
+  g_signal_connect(bb->polyline_btn, "clicked", G_CALLBACK(polyline_cb), self);
 
   /* Arc Button */
   bb->arc_btn = gtk_button_new_with_label("Arc");

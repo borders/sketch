@@ -22,7 +22,7 @@ static void sketch_base_init(sketch_base_t *self, sketch_shape_type_t type)
 	self->is_selected = 0;
 	self->is_highlighted = 0;
 
-	self->line_width = 1.0;
+	self->line_width = 2.0;
 	self->line_type = LINE_TYPE_SOLID;
 	self->line_color = color_const_black;
 
