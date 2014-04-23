@@ -12,6 +12,8 @@
 #include "solver.h"
 #include "sketch_types.h"
 
+#define SNAP_DIST_PX (8.0)
+
 // private function prototypes
 static void add_constraint(constraint_t *c);
 static void update_constraints(void);
@@ -246,58 +248,6 @@ static int sketch_line_is_pt_near(sketch_line_t *s, double x, double y, double t
   return 0;
 }
 
-static int highlight_sketch_line(sketch_line_t *s, double x, double y, double tol)
-{
-  int changed = 0;
-
-  if( sketch_line_is_pt_near(s, x, y, tol)) 
-  {
-    if(!s->base.is_highlighted) 
-    {
-      s->base.is_highlighted = 1;
-      changed = 1;
-    }
-    s->v1->base.is_highlighted = 1;
-    s->v2->base.is_highlighted = 1;
-  } 
-  else 
-  {
-    if(s->base.is_highlighted) 
-    {
-      s->base.is_highlighted = 0;
-      changed = 1;
-    }
-    s->v1->base.is_highlighted = 0;
-    s->v2->base.is_highlighted = 0;
-  }
-  return changed;
-}
-
-static int highlight_sketch_objects(double x, double y, double tol)
-{
-  int i;
-  int something_changed = 0;
-  for(i=0; i<app_data.sketch_count; i++) 
-  {
-    sketch_base_t *s = app_data.sketch[i];
-    switch(s->type) 
-    {
-      case SHAPE_TYPE_LINE:
-        if(highlight_sketch_line((sketch_line_t *)s, x, y, tol)) 
-        {
-          something_changed = 1;
-        }
-        break;
-      case SHAPE_TYPE_ARC:
-        printf("Arc not yet supported as selections\n");
-        break;
-      default:
-        printf("Unsupported shape type!\n");
-    }
-  }
-  return something_changed;
-}
-
 static 
 int line_is_near(sketch_line_t *line, double x_u, double y_u, double tol_u)
 {
@@ -309,12 +259,16 @@ int point_is_near(sketch_point_t *pt, double x_u, double y_u, double tol_u)
 }
 
 static 
-selection_t get_object_at_location(double x_u, double y_u, double tol_u)
+selection_t get_object_at_location(gui_t *gui, double x_u, double y_u, double tol_u)
 {
   int i;
   selection_t sel = {SELECT_TYPE_NONE, NULL};
 
-  for(i=0; i<app_data.sketch_count; i++) 
+  int max_iter = app_data.sketch_count;
+  if(gui->state.draw_active)
+    max_iter--;
+
+  for(i=0; i < max_iter; i++) 
   {
     sketch_base_t *s = app_data.sketch[i];
     switch(s->type) 
@@ -350,6 +304,7 @@ selection_t get_object_at_location(double x_u, double y_u, double tol_u)
         printf("Unsupported shape type!\n");
     }
   }
+  return sel;
 }
 
 static void start_drag(gui_t *gui, double x, double y)
@@ -404,7 +359,6 @@ static void clear_sketch_select(sketch_base_t *s)
     clear_sketch_select(s->children[i]);
   }
 }
-
 
 static void clear_all_selection_flags(void)
 {
@@ -537,7 +491,7 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
             }
 
             selection_t sel = 
-              get_object_at_location(end_xu, end_yu, 5.0 / fabs(gui->x_m) );
+              get_object_at_location(gui, end_xu, end_yu, SNAP_DIST_PX / fabs(gui->x_m) );
             if(sel.type == SELECT_TYPE_POINT) 
             {
               end_xu = ((sketch_point_t *)(sel.object))->x;
@@ -591,31 +545,24 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
           {
             // Select a sketch object
             selection_t sel = get_object_at_location(
+                gui,
                 px_to_user_x(gui, event->x), 
                 px_to_user_y(gui, event->y), 
-                5.0 / fabs(gui->x_m) );
+                SNAP_DIST_PX  / fabs(gui->x_m) );
 
             if(sel.type == SELECT_TYPE_NONE) 
             {
               if(event->state & GDK_SHIFT_MASK)
-              {
                 printf("no change to selection\n");
-              }
               else
-              {
                 selection_clear(gui);
-              }
             }
             else
             {
               if(event->state & GDK_SHIFT_MASK)
-              {
                 selection_add_or_remove(gui, &sel);
-              }
               else
-              {
                 selection_set(gui, &sel);
-              }
             }
             if(gui->state.selection_count > 0)
             {
@@ -626,13 +573,12 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
           }
           case TOOL_LINE:
             // Start of a line
-            gui->state.draw_active = true;
             gui->state.start_x = px_to_user_x(gui, event->x);
             gui->state.start_y = px_to_user_y(gui, event->y);
 
             selection_t sel = 
-              get_object_at_location(gui->state.start_x, gui->state.start_y, 
-                5.0 / fabs(gui->x_m) );
+              get_object_at_location(gui, gui->state.start_x, gui->state.start_y, 
+              SNAP_DIST_PX  / fabs(gui->x_m) );
             if(sel.type == SELECT_TYPE_POINT) 
             {
               gui->state.start_x = ((sketch_point_t *)(sel.object))->x;
@@ -658,6 +604,7 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
               update_constraints();
             }
 
+            gui->state.draw_active = true;
             break;
           default:  
             printf("Unsupported tool!\n");
@@ -870,14 +817,29 @@ gboolean mouse_motion_cb(GtkWidget *widget, GdkEventMotion *event, gpointer data
   gui_t *gui = (gui_t *)data;
   //printf("mouse motion callback!\n");
 
+  double xu, yu;
+  xu = px_to_user_x(gui, event->x);
+  yu = px_to_user_y(gui, event->y);
+
+  selection_t sel = 
+    get_object_at_location(gui, xu, yu, SNAP_DIST_PX / fabs(gui->x_m) );
+
+  gui->state.highlight_sel = sel;
+  if(gui->state.highlight_sel.type != gui->state.last_highlight_sel.type ||
+      gui->state.highlight_sel.object != gui->state.last_highlight_sel.object)
+  {
+    printf("redrawing due to change in highlight selection\n");
+    gtk_widget_queue_draw(gui->canvas);
+  }
+
   if(gui->state.draw_active) 
   {
     gui->state.end_x = event->x;
     gui->state.end_y = event->y;
     if(event->state & GDK_SHIFT_MASK)
     {
-      double dx = px_to_user_x(gui, event->x) - gui->state.start_x;
-      double dy = px_to_user_y(gui, event->y) - gui->state.start_y;
+      double dx = xu - gui->state.start_x;
+      double dy = yu - gui->state.start_y;
       if(fabs(dx) > fabs(dy))
         gui->state.end_y = user_to_px_y(gui, gui->state.start_y);
       else
@@ -891,10 +853,6 @@ gboolean mouse_motion_cb(GtkWidget *widget, GdkEventMotion *event, gpointer data
           sketch_line_t *line = (sketch_line_t *)(app_data.sketch[app_data.sketch_count-1]);
           line->v2->x = px_to_user_x(gui, gui->state.end_x);
           line->v2->y = px_to_user_y(gui, gui->state.end_y);
-
-          highlight_sketch_objects(px_to_user_x(gui, event->x), 
-            px_to_user_y(gui, event->y), 5.0/fabs(gui->x_m) );
-
         }
         break;
       default:
@@ -914,15 +872,6 @@ gboolean mouse_motion_cb(GtkWidget *widget, GdkEventMotion *event, gpointer data
         gtk_widget_queue_draw(gui->canvas);
       }
     }
-    else
-    {
-      if( highlight_sketch_objects(px_to_user_x(gui, event->x), 
-            px_to_user_y(gui, event->y), 5.0/fabs(gui->x_m) ) ) 
-      {
-        //printf("redrawing due to highlight state change\n");
-        gtk_widget_queue_draw(gui->canvas);
-      }
-    }
   }
 
   if(gui->panning) 
@@ -934,6 +883,7 @@ gboolean mouse_motion_cb(GtkWidget *widget, GdkEventMotion *event, gpointer data
     gtk_widget_queue_draw(gui->canvas);
   }
 
+  gui->state.last_highlight_sel = gui->state.highlight_sel;
   return TRUE;
 }
 
@@ -1123,7 +1073,7 @@ static void draw_sketch_point(sketch_base_t *obj, gui_t *gui)
   else if(obj->is_highlighted) 
   {
     draw_set_color(dp, 0,1,0);
-    radius = 3.0;
+    radius = radius * 2;
   }
 
   double x_offset_px = 0;
@@ -1144,13 +1094,15 @@ static void draw_sketch_line(sketch_base_t *obj, gui_t *gui)
 {
   draw_ptr dp = gui->drawer;
 
+  draw_set_line_width(dp, obj->line_width);
+
   if(obj->is_selected) 
   {
     draw_set_color(dp, 1,0,0);
   }
   if(obj->is_highlighted) 
   {
-    draw_set_line_width(dp, 3);
+    draw_set_line_width(dp, obj->line_width * 1.5);
   }
   sketch_line_t *line = (sketch_line_t *)obj;
 
@@ -1383,23 +1335,6 @@ gboolean draw_canvas(GtkWidget *widget, GdkEventExpose *event, gpointer data)
   // draw the ruler
   draw_ruler(gui);
 
-#if 0
-  // draw the active line/arc, if there is one
-  if(gui->state.draw_active) 
-  {
-    draw_set_line_width(dp, 1);
-    draw_set_color(dp, 0,0,1);
-    switch(gui->state.active_tool) 
-    {
-      case TOOL_LINE:
-        draw_line(dp, 
-            user_to_px_x(gui, gui->state.start_x), user_to_px_y(gui, gui->state.start_y), 
-            gui->state.end_x, gui->state.end_y);
-        break;
-    }
-  }
-#endif
-
   // draw sketch objects
   for(i = 0; i < app_data.sketch_count; i++) 
   {
@@ -1428,8 +1363,34 @@ gboolean draw_canvas(GtkWidget *widget, GdkEventExpose *event, gpointer data)
     }
   }
 
-   draw_finish(dp);
-   return TRUE;
+  // draw the currently highlighted object (if there is one)
+  switch(gui->state.highlight_sel.type)
+  {
+    case SELECT_TYPE_NONE:
+      break;
+    case SELECT_TYPE_LINE:
+      {
+        sketch_base_t *line = (sketch_base_t *)gui->state.highlight_sel.object;
+        line->is_highlighted = 1;
+        draw_sketch_line(line, gui);
+        line->is_highlighted = 0;
+      }
+      break;
+    case SELECT_TYPE_POINT:
+      {
+        sketch_base_t *pt = (sketch_base_t *)gui->state.highlight_sel.object;
+        pt->is_highlighted = 1;
+        draw_sketch_point(pt, gui);
+        pt->is_highlighted = 0;
+      }
+      break;
+    default:
+      printf("don't know how to draw this type of highlight object (%d)\n", 
+          gui->state.highlight_sel.type);
+  }
+
+  draw_finish(dp);
+  return TRUE;
 }
 
 static void state_init(struct _state *s)
@@ -1437,6 +1398,8 @@ static void state_init(struct _state *s)
   s->draw_active = false;
   s->active_tool = TOOL_NONE;
   s->selection_count = 0;
+  s->highlight_sel.type = SELECT_TYPE_NONE;
+  s->last_highlight_sel.type = SELECT_TYPE_NONE;
 }
 
 static GtkWidget *toolbar_button_new(const char *image_path, int size, 

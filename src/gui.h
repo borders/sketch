@@ -80,6 +80,8 @@ struct _state
 
   selection_t selections[MAX_SELECTIONS];
   int selection_count;
+  selection_t highlight_sel;
+  selection_t last_highlight_sel;
 };
 
 #define MAX_NUM_MAJOR_TICS (50)
