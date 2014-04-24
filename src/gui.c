@@ -1190,129 +1190,114 @@ static void draw_sketch_line(sketch_base_t *obj, gui_t *gui)
 
 #define CSIZE (10.0)
 
-void draw_line_line_connector(gui_t *gui, sketch_line_t *l1, sketch_line_t *l2)
+
+static void get_line_constraint_location(gui_t *gui, sketch_line_t *line,
+    constraint_type_t type, double *xp, double *yp)
+{
+  double xm, ym;
+  xm = 0.5 * (line->v1->x + line->v2->x);
+  ym = 0.5 * (line->v1->y + line->v2->y);
+
+  double x_px = user_to_px_x(gui, xm);
+  double y_px = user_to_px_y(gui, ym);
+  switch(type)
+  {
+    case CT_LINE_LINE_EQUAL:
+      x_px += 0.0;
+      y_px += 0.0;
+      break;
+    case CT_LINE_HORIZ:
+      x_px += +CSIZE;
+      y_px += 0.0;
+      break;
+    case CT_LINE_VERT:
+      x_px += 0.0;
+      y_px += +CSIZE;
+      break;
+    case CT_LINE_LINE_PARALLEL:
+      x_px += +CSIZE;
+      y_px += +CSIZE;
+      break;
+    case CT_LINE_LINE_ORTHOG:
+      x_px += -CSIZE;
+      y_px += +CSIZE;
+      break;
+    default:
+      ;
+  }
+
+  *xp = x_px;
+  *yp = y_px;
+  return;
+}
+
+void draw_line_line_connector(gui_t *gui, sketch_line_t *l1, sketch_line_t *l2,
+    constraint_type_t type)
 {
   draw_ptr dp = gui->drawer;
   double x1, y1, x2, y2;
-  x1 = 0.5 * (l1->v1->x + l1->v2->x);
-  y1 = 0.5 * (l1->v1->y + l1->v2->y);
-  x2 = 0.5 * (l2->v1->x + l2->v2->x);
-  y2 = 0.5 * (l2->v1->y + l2->v2->y);
+
+  get_line_constraint_location(gui, l1, type, &x1, &y1);
+  get_line_constraint_location(gui, l2, type, &x2, &y2);
+
   draw_set_color(dp, 0.7, 0.7, 0.7);
   draw_set_line_width(dp, 1);
-  draw_line(dp, user_to_px_x(gui, x1), user_to_px_y(gui, y1), 
-      user_to_px_x(gui, x2), user_to_px_y(gui, y2));
+  draw_line(dp, x1, y1, x2, y2);
 }
 
-void draw_line_parallel_constraint(gui_t *gui, sketch_line_t *line)
+void draw_line_constraint(gui_t *gui, sketch_line_t *line, 
+    constraint_type_t type)
 {
   draw_ptr dp = gui->drawer;
   draw_set_color(dp, 0.7, 0.7, 0.7);
 
-  double xm, ym;
-  xm = 0.5 * (line->v1->x + line->v2->x);
-  ym = 0.5 * (line->v1->y + line->v2->y);
+  double x_px, y_px;
+  get_line_constraint_location(gui, line, type, &x_px, &y_px);
 
-  double x_px = user_to_px_x(gui, xm);
-  double y_px = user_to_px_y(gui, ym);
+  // draw the square background
   draw_rectangle_filled(dp, 
       x_px - 0.5*CSIZE, y_px - 0.5*CSIZE, 
       x_px + 0.5*CSIZE, y_px + 0.5*CSIZE );
+
   draw_set_line_width(dp, 1);
   draw_set_color(dp, 0, 0, 0);
-  draw_line(dp, 
-      x_px - 0.4*CSIZE, y_px + 0.4*CSIZE, 
-      x_px + 0.1*CSIZE, y_px - 0.4*CSIZE);
-  draw_line(dp, 
-      x_px - 0.1*CSIZE, y_px + 0.4*CSIZE, 
-      x_px + 0.4*CSIZE, y_px - 0.4*CSIZE);
-}
 
+  switch(type)
+  {
+    case CT_LINE_LINE_EQUAL:
+      draw_line(dp, 
+          x_px - 0.4*CSIZE, y_px - 0.2*CSIZE, 
+          x_px + 0.4*CSIZE, y_px - 0.2*CSIZE);
+      draw_line(dp, 
+          x_px - 0.4*CSIZE, y_px + 0.2*CSIZE, 
+          x_px + 0.4*CSIZE, y_px + 0.2*CSIZE);
+      break;
+    case CT_LINE_HORIZ:
+      draw_line(dp, x_px - 0.4*CSIZE, y_px, x_px + 0.4*CSIZE, y_px);
+      break;
+    case CT_LINE_VERT:
+      draw_line(dp, x_px, y_px - 0.4*CSIZE, x_px, y_px + 0.4*CSIZE);
+      break;
+    case CT_LINE_LINE_PARALLEL:
+      draw_line(dp, 
+          x_px - 0.4*CSIZE, y_px + 0.4*CSIZE, 
+          x_px + 0.1*CSIZE, y_px - 0.4*CSIZE);
+      draw_line(dp, 
+          x_px - 0.1*CSIZE, y_px + 0.4*CSIZE, 
+          x_px + 0.4*CSIZE, y_px - 0.4*CSIZE);
+      break;
+    case CT_LINE_LINE_ORTHOG:
+      draw_line(dp, 
+          x_px - 0.4*CSIZE, y_px + 0.4*CSIZE, 
+          x_px + 0.4*CSIZE, y_px + 0.4*CSIZE);
+      draw_line(dp, 
+          x_px, y_px + 0.4*CSIZE, 
+          x_px, y_px - 0.4*CSIZE);
+      break;
+    default:
+      ;
+  }
 
-void draw_line_perp_constraint(gui_t *gui, sketch_line_t *line)
-{
-  draw_ptr dp = gui->drawer;
-  draw_set_color(dp, 0.7, 0.7, 0.7);
-
-  double xm, ym;
-  xm = 0.5 * (line->v1->x + line->v2->x);
-  ym = 0.5 * (line->v1->y + line->v2->y);
-
-  double x_px = user_to_px_x(gui, xm);
-  double y_px = user_to_px_y(gui, ym);
-  draw_rectangle_filled(dp, 
-      x_px - 0.5*CSIZE, y_px - 0.5*CSIZE, 
-      x_px + 0.5*CSIZE, y_px + 0.5*CSIZE );
-  draw_set_line_width(dp, 1);
-  draw_set_color(dp, 0, 0, 0);
-  draw_line(dp, 
-      x_px - 0.4*CSIZE, y_px + 0.4*CSIZE, 
-      x_px + 0.4*CSIZE, y_px + 0.4*CSIZE);
-  draw_line(dp, 
-      x_px, y_px + 0.4*CSIZE, 
-      x_px, y_px - 0.4*CSIZE);
-}
-void draw_line_equal_constraint(gui_t *gui, sketch_line_t *line)
-{
-  draw_ptr dp = gui->drawer;
-  draw_set_color(dp, 0.7, 0.7, 0.7);
-
-  double xm, ym;
-  xm = 0.5 * (line->v1->x + line->v2->x);
-  ym = 0.5 * (line->v1->y + line->v2->y);
-
-  double x_px = user_to_px_x(gui, xm);
-  double y_px = user_to_px_y(gui, ym);
-  draw_rectangle_filled(dp, 
-      x_px - 0.5*CSIZE, y_px - 0.5*CSIZE, 
-      x_px + 0.5*CSIZE, y_px + 0.5*CSIZE );
-  draw_set_line_width(dp, 1);
-  draw_set_color(dp, 0, 0, 0);
-  draw_line(dp, 
-      x_px - 0.4*CSIZE, y_px - 0.2*CSIZE, 
-      x_px + 0.4*CSIZE, y_px - 0.2*CSIZE);
-  draw_line(dp, 
-      x_px - 0.4*CSIZE, y_px + 0.2*CSIZE, 
-      x_px + 0.4*CSIZE, y_px + 0.2*CSIZE);
-
-}
-
-void draw_line_horiz_constraint(gui_t *gui, sketch_line_t *line)
-{
-  draw_ptr dp = gui->drawer;
-  draw_set_color(dp, 0.7, 0.7, 0.7);
-
-  double xm, ym;
-  xm = 0.5 * (line->v1->x + line->v2->x);
-  ym = 0.5 * (line->v1->y + line->v2->y);
-
-  double x_px = user_to_px_x(gui, xm);
-  double y_px = user_to_px_y(gui, ym);
-  draw_rectangle_filled(dp, 
-      x_px - 0.5*CSIZE, y_px - 0.5*CSIZE, 
-      x_px + 0.5*CSIZE, y_px + 0.5*CSIZE );
-  draw_set_line_width(dp, 1);
-  draw_set_color(dp, 0, 0, 0);
-  draw_line(dp, x_px - 0.4*CSIZE, y_px, x_px + 0.4*CSIZE, y_px);
-}
-
-void draw_line_vert_constraint(gui_t *gui, sketch_line_t *line)
-{
-  draw_ptr dp = gui->drawer;
-  draw_set_color(dp, 0.7, 0.7, 0.7);
-
-  double xm, ym;
-  xm = 0.5 * (line->v1->x + line->v2->x);
-  ym = 0.5 * (line->v1->y + line->v2->y);
-
-  double x_px = user_to_px_x(gui, xm);
-  double y_px = user_to_px_y(gui, ym);
-  draw_rectangle_filled(dp, 
-      x_px - 0.5*CSIZE, y_px - 0.5*CSIZE, 
-      x_px + 0.5*CSIZE, y_px + 0.5*CSIZE );
-  draw_set_line_width(dp, 1);
-  draw_set_color(dp, 0, 0, 0);
-  draw_line(dp, x_px, y_px - 0.4*CSIZE, x_px, y_px + 0.4*CSIZE);
 }
 
 void draw_equal_constraint(gui_t *gui, double x, double y)
@@ -1341,29 +1326,29 @@ void draw_constraint(gui_t *gui, constraint_t *c)
   {
     case CT_LINE_LINE_EQUAL:
       //printf("drawing equal constraint\n");
-      draw_line_line_connector(gui, c->line1, c->line2);
-      draw_line_equal_constraint(gui, c->line1);
-      draw_line_equal_constraint(gui, c->line2);
+      draw_line_line_connector(gui, c->line1, c->line2, c->type);
+      draw_line_constraint(gui, c->line1, c->type);
+      draw_line_constraint(gui, c->line2, c->type);
       break;
     case CT_LINE_LINE_PARALLEL:
       //printf("drawing parallel constraint\n");
-      draw_line_line_connector(gui, c->line1, c->line2);
-      draw_line_parallel_constraint(gui, c->line1);
-      draw_line_parallel_constraint(gui, c->line2);
+      draw_line_line_connector(gui, c->line1, c->line2, c->type);
+      draw_line_constraint(gui, c->line1, c->type);
+      draw_line_constraint(gui, c->line2, c->type);
       break;
     case CT_LINE_LINE_ORTHOG:
       //printf("drawing orthogonal constraint\n");
-      draw_line_line_connector(gui, c->line1, c->line2);
-      draw_line_perp_constraint(gui, c->line1);
-      draw_line_perp_constraint(gui, c->line2);
+      draw_line_line_connector(gui, c->line1, c->line2, c->type);
+      draw_line_constraint(gui, c->line1, c->type);
+      draw_line_constraint(gui, c->line2, c->type);
       break;
     case CT_LINE_HORIZ:
       //printf("drawing horizontal constraint\n");
-      draw_line_horiz_constraint(gui, c->line1);
+      draw_line_constraint(gui, c->line1, c->type);
       break;
     case CT_LINE_VERT:
       //printf("drawing vertical constraint\n");
-      draw_line_vert_constraint(gui, c->line1);
+      draw_line_constraint(gui, c->line1, c->type);
       break;
     default:
       ;
