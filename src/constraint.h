@@ -88,6 +88,9 @@ int constraint_init_line_vert(constraint_t *self, sketch_line_t *line);
 int constraint_init_p_p_coinc(constraint_t *self, sketch_point_t *p1, 
     sketch_point_t *p2);
 
+int constraint_init_l_p_coinc(constraint_t *self, sketch_line_t *l, 
+    sketch_point_t *p);
+
 int constraint_init_p_p_dist(constraint_t *self, sketch_point_t *p1, 
     sketch_point_t *p2, double dist);
 int constraint_init_l_l_parallel(constraint_t *self, sketch_line_t *l1, 

@@ -58,6 +58,48 @@ static double cost_line_vert(constraint_t *self)
 	return (err*err);
 }
 
+static double cost_l_p_coinc(constraint_t *self)
+{
+	/*
+		line-to-point disance:
+		  d = (a*x0 + b*y0 + c) / sqrt(a^2 + b^2)
+
+    where the line is described by:
+      a*x + b*y + c = 0
+
+    and the point is (x0, y0)
+
+    Cost:
+		  C = d^2
+	*/
+  /*
+     equation of line passing  thru (x1,y1) and (x2,y2):
+       (y2-y1)*x + (x2-x1)*y = x1*y2 - x2*y1
+
+     a = y2 - y1
+     b = -(x2 - x1)
+     c = x2*y1 - x1*y2
+  */
+
+  double x0 = self->point1->x;
+  double y0 = self->point1->y;
+
+  double x1 = self->line1->v1->x;
+  double y1 = self->line1->v1->y;
+  double x2 = self->line1->v2->x;
+  double y2 = self->line1->v2->y;
+
+  double a = y2 - y1;
+  double b = x1 - x2;
+  double c = x2 * y1 - x1 * y2;
+
+  double d = (a * x0 + b * y0 + c) / sqrt(a*a + b*b);
+  
+  DEBUG2("l_p_coinc cost:: (x0,y0)=(%g,%g) (x1,y1)=(%g,%g) (x2,y2)=(%g,%g) a=%g b=%g c=%g d=%g\n", 
+      x0, y0, x1, y1, x2, y2, a, b, c, d);
+
+	return (d * d);
+}
 
 static double cost_p_p_coinc(constraint_t *self)
 {
@@ -173,6 +215,9 @@ int constraint_init(constraint_t *self, constraint_type_t type)
 		case CT_LINE_VERT:
 			self->cost = &cost_line_vert;
 			break;
+		case CT_LINE_POINT_COINCIDENT:
+			self->cost = &cost_l_p_coinc;
+			break;
 		case CT_POINT_POINT_COINCIDENT:
 			self->cost = &cost_p_p_coinc;
 			break;
@@ -271,6 +316,17 @@ int constraint_init_l_l_equal(constraint_t *self, sketch_line_t *l1, sketch_line
 		return ret;
 	self->line1 = l1;
 	self->line2 = l2;
+	return 0;
+}
+
+int constraint_init_l_p_coinc(constraint_t *self, sketch_line_t *l, 
+     sketch_point_t *p)
+{
+	int ret = constraint_init(self, CT_LINE_POINT_COINCIDENT);
+	if (ret != 0)
+		return ret;
+	self->line1 = l;
+	self->point1 = p;
 	return 0;
 }
 

@@ -83,14 +83,14 @@ int solver_solve(solver_t *self)
 			//printf("*** iteration=%d, cost=%g\n", iter, self->s->f);
 			//print_parms(self->s->x);
 			if(self->s->f < STOP_THRESH) {
-				//printf("satisfied stoppping criterion!\n");
+				printf("satisfied stoppping criterion!\n");
 				break;
 			}
 		#else
 			//printf("*** iteration=%d, cost=%g\n", iter, self->s->fval);
 			//print_parms(self->s->x);
 			if(self->s->fval < STOP_THRESH) {
-				//printf("satisfied stoppping criterion!\n");
+				printf("satisfied stoppping criterion!\n");
 				break;
 			}
 		#endif
@@ -297,6 +297,14 @@ int parm_map_init(parm_map_t *self, const constraint_t *c[], int c_count)
 		case CT_LINE_VERT:
 			map_add(self, &(c[i]->line1->v1->x) );
 			map_add(self, &(c[i]->line1->v2->x) );
+			break;
+		case CT_LINE_POINT_COINCIDENT:
+			map_add(self, &(c[i]->point1->x) );
+			map_add(self, &(c[i]->point1->y) );
+			map_add(self, &(c[i]->line1->v1->x) );
+			map_add(self, &(c[i]->line1->v1->y) );
+			map_add(self, &(c[i]->line1->v2->x) );
+			map_add(self, &(c[i]->line1->v2->y) );
 			break;
 		case CT_POINT_POINT_COINCIDENT:
 		case CT_POINT_POINT_DIST:

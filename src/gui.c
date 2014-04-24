@@ -559,6 +559,9 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
               app_data.sketch[app_data.sketch_count++] = 
                 (sketch_base_t *)next_line;
 
+              gui->state.start_x = end_xu;
+              gui->state.start_y = end_yu;
+
               coord_2D_t start, end;
               start.x = end_xu;
               start.y = end_yu;
@@ -1080,17 +1083,23 @@ static void draw_ruler(gui_t *self)
     draw_line(dp, 0, y_px, width, y_px);
   }
 
-  // draw the top (horizontal) ruler bar
+  // draw the horizontal ruler bar(s)
   draw_set_color(dp, 0, 0, 0);
   for(i=0; i < ax->num_actual_major_tics; i++) 
   {
     double val = ax->major_tic_values[i];
     double x_px = user_to_px_x(self, val);
+
+    // top
     draw_text(dp, ax->major_tic_labels[i], 8, x_px, 5, ANCHOR_TOP_MIDDLE);
     draw_line(dp, x_px, 15, x_px, 25);
+
+    // bottom
+    draw_text(dp, ax->major_tic_labels[i], 8, x_px, height-5, ANCHOR_BOTTOM_MIDDLE);
+    draw_line(dp, x_px, height - 15, x_px, height - 25);
   }
 
-  // draw the left (vertical) ruler bar
+  // draw the vertical ruler bar(s)
   draw_set_color(dp, 0, 0, 0);
   for(i=0; i < ay->num_actual_major_tics; i++) 
   {
@@ -1098,8 +1107,14 @@ static void draw_ruler(gui_t *self)
     double y_px = user_to_px_y(self, val);
     char *s = ay->major_tic_labels[i];
     double w = draw_get_text_width(dp, s, 8);
+
+    // left
     draw_text(dp, s, 8, 5, y_px, ANCHOR_MIDDLE_LEFT);
     draw_line(dp, 5+w+5, y_px, 30, y_px);
+
+    // right
+    draw_text(dp, s, 8, width - 5, y_px, ANCHOR_MIDDLE_RIGHT);
+    draw_line(dp, width - (5+w+5), y_px, width - 30, y_px);
   }
 
 }
@@ -1583,6 +1598,32 @@ gboolean constraint_cb(GtkWidget *w, gpointer data)
           (sketch_point_t *)(gui->state.selections[0].object),
           (sketch_point_t *)(gui->state.selections[1].object) );
 
+      add_constraint(c);
+      update_constraints();
+      gtk_widget_queue_draw(gui->canvas);
+    }
+    if( (gui->state.selections[0].type == SELECT_TYPE_LINE &&
+         gui->state.selections[1].type == SELECT_TYPE_POINT) ||
+        (gui->state.selections[1].type == SELECT_TYPE_LINE &&
+         gui->state.selections[0].type == SELECT_TYPE_POINT) )
+    {
+      constraint_t *c = constraint_alloc();
+      assert(c != NULL);
+
+      sketch_line_t *l;
+      sketch_point_t *p;
+      if(gui->state.selections[0].type == SELECT_TYPE_LINE)
+      {
+        l = (sketch_line_t *)gui->state.selections[0].object;
+        p = (sketch_point_t *)gui->state.selections[1].object;
+      }
+      else
+      {
+        l = (sketch_line_t *)gui->state.selections[1].object;
+        p = (sketch_point_t *)gui->state.selections[0].object;
+      }
+
+      constraint_init_l_p_coinc(c, l, p);
       add_constraint(c);
       update_constraints();
       gtk_widget_queue_draw(gui->canvas);
