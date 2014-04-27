@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #ifndef DEBUG_LEVEL
-	#define DEBUG_LEVEL 2
+	#define DEBUG_LEVEL 1
 #endif
 
 /* standard stringification macros */

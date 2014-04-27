@@ -467,6 +467,38 @@ static void selection_clear(gui_t *gui)
   update_selection_flags(gui);
 }
 
+static void drag_update(gui_t *gui, double x_px, double y_px)
+{
+  double dx_px = x_px - gui->drag_start_x;
+  double dy_px = y_px - gui->drag_start_y;
+  //printf("dx_px=%g, dy_px=%g\n", dx_px, dy_px);
+  double dx_user = px_to_user_dx(gui, dx_px);
+  double dy_user = px_to_user_dy(gui, dy_px);
+  //printf("dx_user=%g, dy_user=%g\n", dx_user, dy_user);
+  int i;
+  for(i=0; i < gui->state.selection_count; i++)
+  {
+    if(gui->state.selections[i].type == SELECT_TYPE_POINT)
+    {
+      sketch_point_t *p = (sketch_point_t *)(gui->state.selections[i].object);
+      p->x += dx_user;
+      p->y += dy_user;
+    }
+    else if(gui->state.selections[i].type == SELECT_TYPE_LINE)
+    {
+      sketch_line_t *l = (sketch_line_t *)(gui->state.selections[i].object);
+      l->v1->x += dx_user;
+      l->v1->y += dy_user;
+      l->v2->x += dx_user;
+      l->v2->y += dy_user;
+    }
+  }
+  // DEBUG
+  gui->drag_start_x = x_px;
+  gui->drag_start_y = y_px;
+  return;
+}
+
 gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
   gui_t *gui = (gui_t *)data;
@@ -675,30 +707,7 @@ gboolean mouse_button_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
     {
       if(gui->dragging) 
       {
-        double dx_px = event->x - gui->drag_start_x;
-        double dy_px = event->y - gui->drag_start_y;
-        printf("dx_px=%g, dy_px=%g\n", dx_px, dy_px);
-        double dx_user = px_to_user_dx(gui, dx_px);
-        double dy_user = px_to_user_dy(gui, dy_px);
-        printf("dx_user=%g, dy_user=%g\n", dx_user, dy_user);
-        int i;
-        for(i=0; i < gui->state.selection_count; i++)
-        {
-          if(gui->state.selections[i].type == SELECT_TYPE_POINT)
-          {
-            sketch_point_t *p = (sketch_point_t *)(gui->state.selections[i].object);
-            p->x += dx_user;
-            p->y += dy_user;
-          }
-          else if(gui->state.selections[i].type == SELECT_TYPE_LINE)
-          {
-            sketch_line_t *l = (sketch_line_t *)(gui->state.selections[i].object);
-            l->v1->x += dx_user;
-            l->v1->y += dy_user;
-            l->v2->x += dx_user;
-            l->v2->y += dy_user;
-          }
-        }
+        drag_update(gui, event->x, event->y);
         end_drag(gui);
       }
     }
@@ -921,6 +930,12 @@ gboolean mouse_motion_cb(GtkWidget *widget, GdkEventMotion *event, gpointer data
       {
         gui->state.end_x = event->x;
         gui->state.end_y = event->y;
+
+        // DEBUG
+        //drag_update(gui, event->x, event->y);
+        //app_data.constraints_dirty = 1;
+        //update_constraints();
+
         gtk_widget_queue_draw(gui->canvas);
       }
     }
