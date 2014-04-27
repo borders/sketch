@@ -11,6 +11,7 @@
 #include "main.h"
 #include "solver.h"
 #include "sketch_types.h"
+#include "param_dialog.h"
 
 #define SNAP_DIST_PX (8.0)
 
@@ -810,6 +811,12 @@ gboolean key_press_cb(GtkWidget *widget, GdkEventKey *event, gpointer data)
     printf("toggling draw_constraints\n");
     gui->draw_constraints = !gui->draw_constraints;
     gtk_widget_queue_draw(gui->canvas);
+  }
+  else if(event->keyval == 'd')
+  {
+    printf("testing param dialog...\n");
+    double flt = 3.14;
+    param_dialog("test_parm", PARAM_TYPE_FLOAT, &flt);
   }
   else if(event->keyval == 'u')
   {
