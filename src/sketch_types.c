@@ -204,3 +204,11 @@ void sketch_circle_init(sketch_circle_t *self, coord_2D_t const *center,
 	self->radius = radius;
 }
 
+
+double sketch_line_get_length(sketch_line_t *line)
+{
+  double dx = line->v2->x - line->v1->x;
+  double dy = line->v2->y - line->v1->y;
+  return sqrt(dx*dx + dy*dy);
+}
+

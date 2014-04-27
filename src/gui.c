@@ -812,12 +812,6 @@ gboolean key_press_cb(GtkWidget *widget, GdkEventKey *event, gpointer data)
     gui->draw_constraints = !gui->draw_constraints;
     gtk_widget_queue_draw(gui->canvas);
   }
-  else if(event->keyval == 'd')
-  {
-    printf("testing param dialog...\n");
-    double flt = 3.14;
-    param_dialog("test_parm", PARAM_TYPE_FLOAT, &flt);
-  }
   else if(event->keyval == 'u')
   {
     printf("updating constraints\n");
@@ -1221,6 +1215,10 @@ static void get_line_constraint_location(gui_t *gui, sketch_line_t *line,
       x_px += 0.0;
       y_px += +CSIZE;
       break;
+    case CT_LINE_LENGTH:
+      x_px += -CSIZE;
+      y_px += 0.0;
+      break;
     case CT_LINE_LINE_PARALLEL:
       x_px += +CSIZE;
       y_px += +CSIZE;
@@ -1301,6 +1299,14 @@ void draw_line_constraint(gui_t *gui, sketch_line_t *line,
           x_px, y_px + 0.4*CSIZE, 
           x_px, y_px - 0.4*CSIZE);
       break;
+    case CT_LINE_LENGTH:
+      draw_line(dp, 
+          x_px - 0.25*CSIZE, y_px - 0.4*CSIZE, 
+          x_px - 0.25*CSIZE, y_px + 0.4*CSIZE);
+      draw_line(dp, 
+          x_px - 0.25*CSIZE, y_px + 0.4*CSIZE, 
+          x_px + 0.25*CSIZE, y_px + 0.4*CSIZE);
+      break;
     default:
       ;
   }
@@ -1355,6 +1361,10 @@ void draw_constraint(gui_t *gui, constraint_t *c)
       break;
     case CT_LINE_VERT:
       //printf("drawing vertical constraint\n");
+      draw_line_constraint(gui, c->line1, c->type);
+      break;
+    case CT_LINE_LENGTH:
+      //printf("drawing line length constraint\n");
       draw_line_constraint(gui, c->line1, c->type);
       break;
     default:
@@ -1687,6 +1697,45 @@ gboolean constraint_cb(GtkWidget *w, gpointer data)
     update_constraints();
     gtk_widget_queue_draw(gui->canvas);
   }
+  else if(w == gui->constraint_tb.distance_btn)
+  {
+    printf("distance btn\n");
+    int i;
+    int all_lines = 1;
+    for(i=0; i < gui->state.selection_count; i++)
+    {
+      if(gui->state.selections[i].type != SELECT_TYPE_LINE)
+      {
+        all_lines = 0;
+        break;
+      }
+    }
+    if(!all_lines)
+    {
+      printf("distance constraint requires only lines selected\n");
+      return TRUE;
+    }
+    for(i=0; i < gui->state.selection_count; i++)
+    {
+      sketch_line_t *l = (sketch_line_t *)gui->state.selections[i].object;
+
+      int ret;
+      double dist = sketch_line_get_length(l);
+      ret = param_dialog("distance", PARAM_TYPE_FLOAT, &dist);
+
+      if(ret == 0)
+      {
+        constraint_t *c = constraint_alloc();
+        assert(c != NULL);
+        constraint_init_line_length(c, l, dist);
+        add_constraint(c);
+      }
+    }
+
+    update_constraints();
+    gtk_widget_queue_draw(gui->canvas);
+
+  }
   else if(w == gui->constraint_tb.parallel_btn)
   {
     printf("parallel btn\n");
@@ -1797,6 +1846,9 @@ void make_constraint_toolbar(gui_t *self)
 
   p->equal_btn = toolbar_button_new(NULL, 30, "=", 0, constraint_cb, self);
   gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->equal_btn, -1);
+
+  p->distance_btn = toolbar_button_new(NULL, 30, "Dist.", 0, constraint_cb, self);
+  gtk_toolbar_insert((GtkToolbar *)p->tb, (GtkToolItem *)p->distance_btn, -1);
 
   gtk_box_pack_start(GTK_BOX(self->top_level_vbox), p->tb, FALSE, FALSE, 0);
 }

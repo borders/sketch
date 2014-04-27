@@ -45,6 +45,7 @@ struct _constraint_tb
   GtkWidget *parallel_btn;
   GtkWidget *perp_btn;
   GtkWidget *equal_btn;
+  GtkWidget *distance_btn;
 };
 
 struct _status_bar 

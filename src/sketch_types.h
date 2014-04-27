@@ -121,4 +121,6 @@ int sketch_circle_fini(sketch_circle_t *self);
 void sketch_line_free(sketch_line_t *self);
 void sketch_arc_free(sketch_arc_t *self);
 void sketch_circle_free(sketch_circle_t *self);
+
+double sketch_line_get_length(sketch_line_t *line);
 #endif
